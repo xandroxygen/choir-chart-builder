@@ -1,14 +1,8 @@
-import {
-  getAvailableRows,
-  getStartingRow,
-  setGeneratedRowCounts,
-  getSheetByName,
-  references
-} from "./sheet";
+import * as Sheet from "./sheet";
 import { buildRows, getSeatsPerRow } from "./Code";
 
 function generateRowCounts() {
-  const inputData = getSheetByName(references().sheets.Input)
+  const inputData = Sheet.getSheetByName(Sheet.references().sheets.Input)
     .getDataRange()
     .getValues();
 
@@ -16,19 +10,24 @@ function generateRowCounts() {
   inputData.shift();
 
   const total = inputData.length;
-  const rows = buildRows(total, getAvailableRows(), getStartingRow());
+  const rows = buildRows(
+    total,
+    Sheet.getAvailableRows(),
+    Sheet.getStartingRow()
+  );
 
   const balancedRows = getSeatsPerRow(total, rows);
 
-  setGeneratedRowCounts(balancedRows.map(row => row.seats));
+  Sheet.setGeneratedRowCounts(balancedRows.map(row => row.seats));
 }
 
 function confirmRowCounts() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("Configuration");
-  const rowCounts = sheet
-    .getRange(references().cells.cGeneratedRows)
+  const rowCounts = Sheet.getConfigurationSheet()
+    .getRange(Sheet.references().cells.cGeneratedRows)
     .getValues();
-  sheet.getRange(references().cells.cFinalRows).setValues(rowCounts);
+  Sheet.getSheetByName(Sheet.references().sheets.Data.RowCounts)
+    .getRange(Sheet.references().cells.cFinalRows)
+    .setValues(rowCounts);
 }
 
 function onOpenTrigger() {

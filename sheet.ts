@@ -1,13 +1,11 @@
-export function getConfigurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
-  return SpreadsheetApp.getActive().getSheetByName(
-    references().sheets.Configuration
-  );
-}
-
 export function getSheetByName(
   name: string
 ): GoogleAppsScript.Spreadsheet.Sheet {
   return SpreadsheetApp.getActive().getSheetByName(name);
+}
+
+export function getConfigurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+  return getSheetByName(references().sheets.Configuration);
 }
 
 export function getAvailableRows(): number {
