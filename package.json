@@ -1,0 +1,21 @@
+{
+  "name": "seating-chart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@types/google-apps-script": "0.0.55",
+    "prettier": "^1.18.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xandroxygen/choir-chart-builder.git"
+  },
+  "author": "Xander Moffatt",
+  "license": "ISC",
+  "homepage": "https://github.com/xandroxygen/choir-chart-builder#readme"
+}
