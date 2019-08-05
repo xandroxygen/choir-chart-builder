@@ -1,40 +1,81 @@
+import { Row } from "./definitions";
+
 export function getSheetByName(
   name: string
 ): GoogleAppsScript.Spreadsheet.Sheet {
   return SpreadsheetApp.getActive().getSheetByName(name);
 }
 
-export function getConfigurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+export function configurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
   return getSheetByName(references().sheets.Configuration);
+}
+
+export function dataRowsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+  return getSheetByName(references().sheets.Data.Rows);
 }
 
 export function getAvailableRows(): number {
   return parseInt(
-    getConfigurationSheet()
+    configurationSheet()
       .getRange(references().cells.cAvailableRows)
       .getValue()
   );
 }
 
 export function getStartingRow(): string {
-  return getConfigurationSheet()
+  return configurationSheet()
     .getRange(references().cells.startingRow)
     .getValue();
 }
 
-export function setGeneratedRowCounts(rowCounts: number[]) {
-  const output = rowCounts.reverse().map(c => [c]);
-  getConfigurationSheet()
-    .getRange(references().cells.cGeneratedRows)
-    .setValues(output);
+export function setGeneratedRows(rows: Row[]) {
+  const [r, c] = references().cells.cGeneratedRows;
+  // copy rows here bc reverse is in-place
+  const output = [...rows].reverse().map(row => [row.letter, row.seats]);
+  getRowsRange(r, c, configurationSheet()).setValues(output);
+}
+
+export function getGeneratedRowCounts(): number[] {
+  const [r, c] = references().cells.cGeneratedRows;
+  return (
+    configurationSheet()
+      // only read the counts, not the letters
+      .getRange(r, c + 1, getAvailableRows())
+      .getValues()
+      .map(([value]) => value)
+      .reverse()
+  );
+}
+
+export function saveRows(rows: Row[]) {
+  const [r, c] = references().cells.data.rows;
+  const values = rows.map(row => [row.letter, row.seats]);
+  getRowsRange(r, c, dataRowsSheet()).setValues(values);
+}
+
+export function readRows(): Row[] {
+  const [r, c] = references().cells.data.rows;
+  return getRowsRange(r, c, dataRowsSheet())
+    .getValues()
+    .map(([letter, seats]) => ({ letter, seats } as Row));
+}
+
+export function getRowsRange(
+  r: number,
+  c: number,
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+): GoogleAppsScript.Spreadsheet.Range {
+  return sheet.getRange(r, c, getAvailableRows(), 2);
 }
 
 export function references() {
   const cells = {
     cAvailableRows: "A11",
-    cGeneratedRows: "A2:A7",
-    cFinalRows: "A2:A7",
-    startingRow: "A14"
+    startingRow: "A14",
+    cGeneratedRows: [2, 1],
+    data: {
+      rows: [2, 1]
+    }
   };
 
   const dataPrefix = "INTERNAL | DO NOT CHANGE |";
@@ -42,7 +83,7 @@ export function references() {
     Configuration: "Configuration",
     Input: "Input",
     Data: {
-      RowCounts: `${dataPrefix} Row Counts`
+      Rows: `${dataPrefix} Rows`
     }
   };
 

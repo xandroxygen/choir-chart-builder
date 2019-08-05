@@ -3,8 +3,10 @@ import {
   getStartingRow,
   getAvailableRows,
   references,
-  getConfigurationSheet,
-  setGeneratedRowCounts
+  getGeneratedRowCounts,
+  setGeneratedRows,
+  saveRows,
+  readRows
 } from "./sheet";
 import { buildRows, getSeatsPerRow } from "./Code";
 
@@ -21,16 +23,19 @@ function generateRowCounts() {
 
   const balancedRows = getSeatsPerRow(total, rows);
 
-  setGeneratedRowCounts(balancedRows.map(row => row.seats));
+  setGeneratedRows(balancedRows);
+  saveRows(rows);
 }
 
 function confirmRowCounts() {
-  const rowCounts = getConfigurationSheet()
-    .getRange(references().cells.cGeneratedRows)
-    .getValues();
-  getSheetByName(references().sheets.Data.RowCounts)
-    .getRange(references().cells.cFinalRows)
-    .setValues(rowCounts);
+  const rows = readRows();
+  const generatedRowCounts = getGeneratedRowCounts();
+
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].seats = generatedRowCounts[i];
+  }
+
+  saveRows(rows);
 }
 
 function onOpenTrigger() {
