@@ -1,12 +1,13 @@
 function transformNames() {
-    const sheet = SpreadsheetApp.getActive().getSheetByName('Input');
-    const names = sheet.getRange('A2:E188').getValues();
-    const result = names.map(([first, last, section, height, inchHeight], index) => {
+  const sheet = SpreadsheetApp.getActive().getSheetByName("Input");
+  const names = sheet.getRange("A2:E188").getValues();
+  const result = names.map(
+    ([first, last, section, height, inchHeight], index) => {
       const ret = [`${inchHeight} - ${index}`];
       let retLast;
       switch (section) {
         case "T1":
-          retLast = "Tenor 1"
+          retLast = "Tenor 1";
           break;
         case "T2":
           retLast = "Tenor 2";
@@ -18,10 +19,11 @@ function transformNames() {
           retLast = "Bass";
           break;
       }
-      
-      ret.push(retLast, section, height)
+
+      ret.push(retLast, section, height);
       return ret;
-    }) 
-  
-    sheet.getRange('G2:J188').setValues(result);
-  }
+    }
+  );
+
+  sheet.getRange("G2:J188").setValues(result);
+}
