@@ -33,7 +33,7 @@ export function references() {
   const cells = {
     cAvailableRows: "A11",
     cGeneratedRows: "A2:A7",
-    cFinalRows: "C2:C7",
+    cFinalRows: "A2:A7",
     startingRow: "A14"
   };
 
