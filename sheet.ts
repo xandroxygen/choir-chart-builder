@@ -1,4 +1,4 @@
-import { Row } from "./definitions";
+import { Row, Section, Singer } from "./definitions";
 
 export function getSheetByName(
   name: string
@@ -12,6 +12,14 @@ export function configurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
 
 export function dataRowsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
   return getSheetByName(references().sheets.Data.Rows);
+}
+
+export function dataSectionsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+  return getSheetByName(references().sheets.Data.Sections);
+}
+
+export function dataSingersSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+  return getSheetByName(references().sheets.Data.Singers);
 }
 
 export function getAvailableRows(): number {
@@ -68,13 +76,70 @@ export function getRowsRange(
   return sheet.getRange(r, c, getAvailableRows(), 2);
 }
 
+export function saveSections(sections: Section[]) {
+  const [r, c] = references().cells.data.sections;
+  const values = sections.map(section => [section.title, section.count]);
+
+  dataSectionsSheet()
+    .getRange(r, c, sections.length, 2)
+    .setValues(values);
+}
+
+export function readSections(): Section[] {
+  const values = dataSectionsSheet()
+    .getDataRange()
+    .getValues();
+
+  // remove header row
+  values.shift();
+
+  return values.map(([title, count]) => ({ title, count } as Section));
+}
+
+export function saveSingers(singers: Singer[]) {
+  const [r, c] = references().cells.data.singers;
+  const values = singers.map(singer => [
+    singer.firstName,
+    singer.lastName,
+    singer.section,
+    singer.height,
+    singer.seat
+  ]);
+
+  dataSingersSheet()
+    .getRange(r, c, singers.length, 5)
+    .setValues(values);
+}
+
+export function readSingers(): Singer[] {
+  const values = dataSingersSheet()
+    .getDataRange()
+    .getValues();
+
+  // remove header row
+  values.shift();
+
+  return values.map(
+    ([firstName, lastName, section, height, seat]) =>
+      ({
+        firstName,
+        lastName,
+        section,
+        height: parseFloat(height),
+        seat
+      } as Singer)
+  );
+}
+
 export function references() {
   const cells = {
     cAvailableRows: "A11",
     startingRow: "A14",
     cGeneratedRows: [2, 1],
     data: {
-      rows: [2, 1]
+      rows: [2, 1],
+      sections: [2, 1],
+      singers: [2, 1]
     }
   };
 
@@ -83,7 +148,9 @@ export function references() {
     Configuration: "Configuration",
     Input: "Input",
     Data: {
-      Rows: `${dataPrefix} Rows`
+      Rows: `${dataPrefix} Rows`,
+      Sections: `${dataPrefix} Sections`,
+      Singers: `${dataPrefix} Singers`
     }
   };
 

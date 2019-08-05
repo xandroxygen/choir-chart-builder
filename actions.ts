@@ -6,25 +6,38 @@ import {
   getGeneratedRowCounts,
   setGeneratedRows,
   saveRows,
-  readRows
+  readRows,
+  saveSections,
+  saveSingers
 } from "./sheet";
-import { buildRows, getSeatsPerRow } from "./Code";
+import { buildRows, buildSections, buildSingers } from "./Code";
 
-function generateRowCounts() {
-  const inputData = getSheetByName(references().sheets.Input)
-    .getDataRange()
-    .getValues();
+function parseInput() {
+  const inputRange = getSheetByName(references().sheets.Input).getDataRange();
+
+  // set everything to text format
+  inputRange.setNumberFormat("@");
+
+  const inputData = inputRange.getValues();
 
   // remove header row
   inputData.shift();
 
+  // handle rows
   const total = inputData.length;
   const rows = buildRows(total, getAvailableRows(), getStartingRow());
 
-  const balancedRows = getSeatsPerRow(total, rows);
-
-  setGeneratedRows(balancedRows);
+  setGeneratedRows(rows);
   saveRows(rows);
+
+  // handle sections
+  const inputSections = inputData.map(inputRow => inputRow[2]);
+  const sections = buildSections(inputSections);
+  saveSections(sections);
+
+  // handle singers
+  const singers = buildSingers(inputData);
+  saveSingers(singers);
 }
 
 function confirmRowCounts() {
@@ -41,7 +54,7 @@ function confirmRowCounts() {
 function onOpenTrigger() {
   const spreadsheet = SpreadsheetApp.getActive();
   spreadsheet.addMenu("Actions", [
-    { name: "Generate row counts", functionName: "generateRowCounts" },
+    { name: "Parse input", functionName: "parseInput" },
     { name: "Confirm row counts", functionName: "confirmRowCounts" }
   ]);
 }
