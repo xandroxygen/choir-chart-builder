@@ -1,10 +1,5 @@
 import { SectionTitle, Row, SectionNumbers } from "./definitions";
 
-function buildChart() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("Input");
-  const inputData = sheet.getDataRange().getValues();
-}
-
 /**
  * Converts height from "ft-in" to inches.
  * @param {string} height The height in "ft-in" format

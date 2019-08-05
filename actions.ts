@@ -2,13 +2,13 @@ import {
   getAvailableRows,
   getStartingRow,
   setGeneratedRowCounts,
-  getInputSheet
+  getSheetByName,
+  references
 } from "./sheet";
 import { buildRows, getSeatsPerRow } from "./Code";
-import { references } from "./references";
 
 function generateRowCounts() {
-  const inputData = getInputSheet()
+  const inputData = getSheetByName(references().sheets.Input)
     .getDataRange()
     .getValues();
 
