@@ -13,12 +13,8 @@ import {
   readSingers,
   showSectionStacks
 } from "./sheet";
-import {
-  buildRows,
-  buildSections,
-  buildSingers,
-  getSeatsFromSection
-} from "./Code";
+import { buildRows, buildSections, buildSingers } from "./Code";
+import { buildSectionStacks } from "./sectionStacks";
 
 function parseInput() {
   const inputRange = getSheetByName(references().sheets.Input).getDataRange();
@@ -67,11 +63,11 @@ function buildChart() {
   const singers = readSingers();
 }
 
-function buildSectionStacks() {
+function generateSectionStacks() {
   // this should eventually happen right after row counts are confirmed
   const rows = readRows();
   const sections = readSections();
-  const sectionStacks = getSeatsFromSection(sections, rows);
+  const sectionStacks = buildSectionStacks(sections, rows);
   showSectionStacks(sectionStacks, rows, sections);
 }
 
@@ -81,6 +77,9 @@ function onOpenTrigger() {
     { name: "Parse input", functionName: "parseInput" },
     { name: "Confirm row counts", functionName: "confirmRowCounts" },
     { name: "Build seating chart", functionName: "buildChart" },
-    { name: "(temp) Build section stacks", functionName: "buildSectionStacks" }
+    {
+      name: "(temp) Build section stacks",
+      functionName: "generateSectionStacks"
+    }
   ]);
 }
