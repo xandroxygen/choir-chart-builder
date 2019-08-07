@@ -8,9 +8,17 @@ import {
   saveRows,
   readRows,
   saveSections,
-  saveSingers
+  saveSingers,
+  readSections,
+  readSingers,
+  showSectionStacks
 } from "./sheet";
-import { buildRows, buildSections, buildSingers } from "./Code";
+import {
+  buildRows,
+  buildSections,
+  buildSingers,
+  getSeatsFromSection
+} from "./Code";
 
 function parseInput() {
   const inputRange = getSheetByName(references().sheets.Input).getDataRange();
@@ -25,7 +33,9 @@ function parseInput() {
 
   // handle rows
   const total = inputData.length;
-  const rows = buildRows(total, getAvailableRows(), getStartingRow());
+  const availableRows = getAvailableRows();
+  const startingRow = getStartingRow();
+  const rows = buildRows(total, availableRows, startingRow);
 
   setGeneratedRows(rows);
   saveRows(rows);
@@ -51,10 +61,26 @@ function confirmRowCounts() {
   saveRows(rows);
 }
 
+function buildChart() {
+  const rows = readRows();
+  const sections = readSections();
+  const singers = readSingers();
+}
+
+function buildSectionStacks() {
+  // this should eventually happen right after row counts are confirmed
+  const rows = readRows();
+  const sections = readSections();
+  const sectionStacks = getSeatsFromSection(sections, rows);
+  showSectionStacks(sectionStacks, rows, sections);
+}
+
 function onOpenTrigger() {
   const spreadsheet = SpreadsheetApp.getActive();
   spreadsheet.addMenu("Actions", [
     { name: "Parse input", functionName: "parseInput" },
-    { name: "Confirm row counts", functionName: "confirmRowCounts" }
+    { name: "Confirm row counts", functionName: "confirmRowCounts" },
+    { name: "Build seating chart", functionName: "buildChart" },
+    { name: "(temp) Build section stacks", functionName: "buildSectionStacks" }
   ]);
 }

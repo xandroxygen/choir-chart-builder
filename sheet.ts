@@ -131,15 +131,45 @@ export function readSingers(): Singer[] {
   );
 }
 
+export function showSectionStacks(
+  sectionStacks: number[][],
+  rows: Row[],
+  sections: Section[]
+) {
+  const [r, c] = references().cells.sectionStacks;
+  const numRows = 1 + rows.length + 2; // header + rows + total + actual
+  const numColumns = 1 + sections.length + 2; // header + sections + total + actual
+
+  const values: any[][] = [];
+  values.push(["", ...sections.map(s => s.title), "Total", "Actual"]);
+
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const stackRow = sectionStacks.map(stack => stack[i]);
+    const stackTotal = stackRow.reduce((total, num) => total + num, 0);
+    values.push([rows[i].letter, ...stackRow, stackTotal, rows[i].seats]);
+  }
+
+  const stackTotals = sectionStacks.map(stack =>
+    stack.reduce((total, num) => total + num, 0)
+  );
+  values.push(["Total", ...stackTotals, "", ""]);
+  values.push(["Actual", ...sections.map(s => s.count), "", ""]);
+
+  configurationSheet()
+    .getRange(r, c, numRows, numColumns)
+    .setValues(values);
+}
+
 export function references() {
   const cells = {
     cAvailableRows: "A11",
     startingRow: "A14",
     cGeneratedRows: [2, 1],
+    sectionStacks: [1, 4], //D1
     data: {
-      rows: [2, 1],
-      sections: [2, 1],
-      singers: [2, 1]
+      rows: [2, 1], //A2
+      sections: [2, 1], //A2
+      singers: [2, 1] //A2
     }
   };
 

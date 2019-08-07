@@ -22,3 +22,8 @@ export enum SectionTitle {
   B1 = "B1",
   B2 = "B2"
 }
+
+export interface IncorrectPair {
+  forAdding: number;
+  forSubtracting: number;
+}
