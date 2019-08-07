@@ -94,6 +94,18 @@ export function buildRows(
   return rows;
 }
 
+/**
+ * Calculates seats per section per row.
+ *
+ * assumptions:
+ * - there will be an even number of incorrect sections
+ * - the incorrect sections will always be 1 off either way
+ * - the number of positive incorrect sections will match the negative
+ * - there will be an even number of incorrect rows
+ *
+ * @param sections
+ * @param rows
+ */
 export function getSeatsFromSection(
   sections: Section[],
   rows: Row[]
@@ -109,49 +121,44 @@ export function getSeatsFromSection(
     rows.map(row => Math.round(proportion * row.seats))
   );
 
-  const stackCounts = sectionStacks.map(stack =>
-    stack.reduce((sum, num) => sum + num, 0)
+  const [rowsForAdding, rowsForSubtracting] = rows.reduce(
+    ([forAdding, forSubtracting], row, i) => {
+      // sum up calculated row from stacks
+      const rowCount = sectionStacks.reduce(
+        (total, stack) => total + stack[i],
+        0
+      );
+
+      // find imbalanced rows and note their indices
+      if (rowCount < row.seats) {
+        forAdding.push(i);
+      } else if (rowCount > row.seats) {
+        forSubtracting.push(i);
+      }
+
+      return [forAdding, forSubtracting];
+    },
+    [[], []] as [number[], number[]] // initial return values
   );
 
-  const rowCounts = rows.map((row, i) =>
-    sectionStacks.reduce((total, stack) => total + stack[i], 0)
+  const [sectionsForAdding, sectionsForSubtracting] = sections.reduce(
+    ([forAdding, forSubtracting], section, i) => {
+      // sum up calculated section from stack
+      const sectionCount = sectionStacks[i].reduce((sum, c) => sum + c, 0);
+
+      // find imbalanced sections and note their indices
+      if (sectionCount < section.count) {
+        forAdding.push(i);
+      } else if (sectionCount > section.count) {
+        forSubtracting.push(i);
+      }
+      return [forAdding, forSubtracting];
+    },
+    [[], []] as [number[], number[]] // initial return values
   );
 
-  // assumptions:
-  // - there will be an even number of incorrect sections
-  // - the incorrect sections will always be 1 off either way
-  // - the number of positive incorrect sections will match the negative
-  // - there will be an even number of incorrect rows
-
-  const rowsForSubtracting: number[] = [];
-  const rowsForAdding: number[] = [];
-  for (let i = 0; i < rows.length; i++) {
-    if (rowCounts[i] < rows[i].seats) {
-      rowsForAdding.push(i);
-    } else if (rowCounts[i] > rows[i].seats) {
-      rowsForSubtracting.push(i);
-    }
-  }
-
-  const sectionsForSubtracting: number[] = [];
-  const sectionsForAdding: number[] = [];
-  for (let i = 0; i < sections.length; i++) {
-    if (stackCounts[i] < sections[i].count) {
-      sectionsForAdding.push(i);
-    } else if (stackCounts[i] > sections[i].count) {
-      sectionsForSubtracting.push(i);
-    }
-  }
-
-  // JUST KIDDING
-  // instead of adjusting rows and sections, I need to be adjusting only the section stacks
-  // keep the indices of the positive/negative rows/sections, instead of actual rows/sections
-  // adjust the rows, check if it fits
-  // adjust the sections, check if it fits
-  // adjust both, check if it fits?
-
-  // JUST KIDDING SOME MORE
-  // instead of thinking about it in pairs just think about rows to add, sections to add, rows to subtract, sections to subtract
+  // to solve this problem just think about:
+  //    rows to add, sections to add, rows to subtract, sections to subtract
   // and all possible combos of those
   // ie rows to add: 2,4
   // rows to subtract: 3,5
@@ -162,61 +169,54 @@ export function getSeatsFromSection(
   // - s 0,1 2,3 r 2,5 4,3
   // - s 0,3 2,1 r 2,3 4,5
   // - s 0,3 2,1 r 2,5 4,3
-  // so construct row/section pairs separately and then iterate over both
 
-  // while subtracting rows aren't exhausted
-  //    make a copy of subtracting rows
-  //    for each row that needs adding
-  //      shift the first subtracting row from copy
-  //      make a pair
-  //    shift subtracting rows forward
-  //    check if we have finished cycling
+  // construct combinations of incorrect rows
   const rowCombinationsForAdjusting: IncorrectPair[][] = [];
-  let finishedCyclingSubtractedRows = false;
-  const firstRowForSubtracting = rowsForSubtracting[0];
-  while (!finishedCyclingSubtractedRows) {
+  const firstRow = rowsForSubtracting[0];
+  do {
     // make a copy so shifting doesn't break things
     const rowsForSubtractingCopy = [...rowsForSubtracting];
-    const rowPairs: IncorrectPair[] = [];
 
     // create pairs without reusing rows
-    rowsForAdding.forEach(forAdding => {
-      const forSubtracting = rowsForSubtractingCopy.shift();
-      rowPairs.push({ forAdding, forSubtracting });
-    });
+    const rowPairs: IncorrectPair[] = rowsForAdding.map(forAdding => ({
+      forAdding,
+      forSubtracting: rowsForSubtractingCopy.shift()
+    }));
     rowCombinationsForAdjusting.push(rowPairs);
 
     // shift subtracting rows forward
     rowsForSubtracting.push(rowsForSubtracting.shift());
 
     // check if we have reached the beginning again
-    finishedCyclingSubtractedRows =
-      rowsForSubtracting[0] === firstRowForSubtracting;
-  }
+  } while (rowsForSubtracting[0] !== firstRow);
 
+  // construct combinations of incorrect sections
   const sectionCombinationsForAdjusting: IncorrectPair[][] = [];
-  let finishedCyclingSubtractedSections = false;
-  const firstSectionForSubtracting = sectionsForSubtracting[0];
-  while (!finishedCyclingSubtractedSections) {
+  const firstSection = sectionsForSubtracting[0];
+  do {
     // make a copy so shifting doesn't break things
     const sectionsForSubtractingCopy = [...sectionsForSubtracting];
-    const sectionPairs: IncorrectPair[] = [];
 
     // create pairs without reusing rows
-    sectionsForAdding.forEach(forAdding => {
-      const forSubtracting = sectionsForSubtractingCopy.shift();
-      sectionPairs.push({ forAdding, forSubtracting });
-    });
+    const sectionPairs: IncorrectPair[] = sectionsForAdding.map(forAdding => ({
+      forAdding,
+      forSubtracting: sectionsForSubtractingCopy.shift()
+    }));
     sectionCombinationsForAdjusting.push(sectionPairs);
 
     // shift subtracting rows forward
     sectionsForSubtracting.push(sectionsForSubtracting.shift());
 
     // check if we have reached the beginning again
-    finishedCyclingSubtractedSections =
-      sectionsForSubtracting[0] === firstSectionForSubtracting;
-  }
+  } while (sectionsForSubtracting[0] !== firstSection);
 
+  /**
+   * apply pair of incorrect rows, one for adding and one for subtracting
+   *
+   * find the first column that is still valid when adjusted to make row counts match
+   * @param rowPair
+   * @returns a reset function that will undo the adjustments to section stacks
+   */
   const applyRowPair = (rowPair: IncorrectPair): Function => {
     let adjustedColumnIndex: number;
     for (let k = 0; k < sections.length; k++) {
@@ -266,6 +266,13 @@ export function getSeatsFromSection(
     return reset;
   };
 
+  /**
+   * apply pair of incorrect sections, one for adding and one for subtracting
+   *
+   * find the first row that is still valid when adjusted to make section counts match
+   * @param sectionPair
+   * @returns a reset function that will undo the adjustments to section stacks
+   */
   const applySectionPair = (sectionPair: IncorrectPair): Function => {
     let adjustedRowIndex: number;
     const sectionForSubtracting = sectionStacks[sectionPair.forSubtracting];
