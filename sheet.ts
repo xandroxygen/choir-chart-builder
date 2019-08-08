@@ -107,7 +107,7 @@ export function saveSingers(singers: Singer[]) {
     singer.lastName,
     singer.section,
     singer.height,
-    singer.seat
+    `${singer.seat.row}${singer.seat.num}`
   ]);
 
   dataSingersSheet()
@@ -130,7 +130,10 @@ export function readSingers(): Singer[] {
         lastName,
         section,
         height: parseFloat(height),
-        seat
+        seat: {
+          row: seat.slice(0, 1),
+          num: parseInt(seat.slice(1))
+        }
       } as Singer)
   );
 }

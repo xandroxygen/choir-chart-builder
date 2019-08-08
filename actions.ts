@@ -114,7 +114,6 @@ function onOpenTrigger() {
     {
       name: "3. Confirm seats per section + continue",
       functionName: "confirmSectionStacks"
-    },
-    { name: "4: Build seating chart", functionName: "buildChart" }
+    }
   ]);
 }

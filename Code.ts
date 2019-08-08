@@ -129,7 +129,10 @@ export function buildSingers(inputData: string[][]): Singer[] {
         lastName,
         section,
         height: convertHeight(height),
-        seat: "A1"
+        seat: {
+          row: "A",
+          num: 1
+        }
       } as Singer)
   );
 }
@@ -279,7 +282,10 @@ export function layoutSingers(
       const seats: number[] = sectionLayout[letter];
       for (let seatNumber of seats) {
         const singer = sectionSingers.pop();
-        singer.seat = `${letter}${seatNumber}`;
+        singer.seat = {
+          row: letter,
+          num: seatNumber
+        };
         seatedSingers.push(singer);
       }
     });

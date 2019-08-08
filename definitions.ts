@@ -8,7 +8,10 @@ export interface Singer {
   lastName: string;
   section: SectionTitle;
   height: number;
-  seat: string;
+  seat: {
+    row: string;
+    num: number;
+  };
 }
 
 export interface Row {
