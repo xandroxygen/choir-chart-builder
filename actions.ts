@@ -13,9 +13,16 @@ import {
   readSingers,
   showSectionStacks,
   readSectionStacks,
-  saveSectionStacks
+  saveSectionStacks,
+  getConfirmedSectionStacks
 } from "./sheet";
-import { buildRows, buildSections, buildSingers, layoutSections } from "./Code";
+import {
+  buildRows,
+  buildSections,
+  buildSingers,
+  layoutSections,
+  layoutSingers
+} from "./Code";
 import { buildSectionStacks } from "./sectionStacks";
 
 function parseInput() {
@@ -66,23 +73,34 @@ function confirmRowCounts() {
 }
 
 function confirmSectionStacks() {
+  const rows = readRows();
+  const sections = readSections();
+  const sectionStacks = getConfirmedSectionStacks(sections.length, rows.length);
+
+  saveSectionStacks(sectionStacks);
+
   buildChart();
 }
 
 function buildChart() {
+  Logger.log("reading rows");
   const rows = readRows();
+  Logger.log("reading sections");
   const sections = readSections();
+  Logger.log("reading singers");
   const singers = readSingers();
+  Logger.log("reading section stacks");
   const sectionStacks = readSectionStacks();
 
   // layout section stacks in seats
-}
+  Logger.log("laying out sections");
+  const sectionLayouts = layoutSections(sectionStacks, rows);
 
-function test() {
-  const rows = readRows();
-  const sections = readSections();
-  const sectionStacks = buildSectionStacks(sections, rows);
-  const sectionSeats = layoutSections(sectionStacks, rows);
+  Logger.log("laying out singers");
+  const seatedSingers = layoutSingers(singers, sectionLayouts, sections);
+
+  Logger.log("saving singers");
+  saveSingers(seatedSingers);
 }
 
 function onOpenTrigger() {
@@ -97,6 +115,6 @@ function onOpenTrigger() {
       name: "3. Confirm seats per section + continue",
       functionName: "confirmSectionStacks"
     },
-    { name: "test", functionName: "test" }
+    { name: "4: Build seating chart", functionName: "buildChart" }
   ]);
 }

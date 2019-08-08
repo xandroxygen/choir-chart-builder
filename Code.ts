@@ -152,6 +152,7 @@ export function layoutSections(
 
   // an array of sections, each containing rows,
   // indexed by letter, each containing the seat numbers for that row
+  Logger.log("creating section layouts");
   const sectionLayouts: SectionLayout[] = sectionStacks.map(_ =>
     rows.reduce((ret, row) => {
       ret[row.letter] = [];
@@ -165,6 +166,7 @@ export function layoutSections(
     startPoints[letter] = madsenMidpoint[letter];
   }
 
+  Logger.log("counting seats left");
   // for each section left of the midpoint and row in the section,
   // count out the seat numbers from the start point on the right
   // to the end point on the left
@@ -188,6 +190,7 @@ export function layoutSections(
     startPoints[letter] = madsenMidpoint[letter];
   }
 
+  Logger.log("counting seats right");
   // for each section right of the midpoint and row in the section,
   // count out the seat numbers from the start point on the left
   // to the end point on the right
@@ -212,6 +215,7 @@ export function layoutSections(
     // row is overflowing left, move right
     const leftOverflow = 1 - sectionLayouts[0][letter][0];
     if (leftOverflow > 0) {
+      Logger.log("overflowing left");
       for (let layout of sectionLayouts) {
         const row = layout[letter] as number[];
 
@@ -219,7 +223,8 @@ export function layoutSections(
         row.splice(0, leftOverflow);
 
         // add overflow back to the right
-        for (let j = peek(row); j < peek(row) + leftOverflow; j++) {
+        const lastInRow = peek(row);
+        for (let j = lastInRow; j < lastInRow + leftOverflow; j++) {
           // add 1 because seat numbers are 1-based
           row.push(j + 1);
         }
@@ -230,6 +235,7 @@ export function layoutSections(
     const lastSection = peek(sectionLayouts)[letter] as number[];
     const rightOverflow = peek(lastSection) - maxRowSize;
     if (rightOverflow > 0) {
+      Logger.log("overflowing right");
       for (let layout of sectionLayouts) {
         const row = layout[letter] as number[];
 
@@ -237,7 +243,8 @@ export function layoutSections(
         row.splice(-rightOverflow, rightOverflow);
 
         // add overflow back to the left
-        for (let j = row[0]; j > row[0] - rightOverflow; j--) {
+        const firstInRow = row[0];
+        for (let j = firstInRow; j > firstInRow - rightOverflow; j--) {
           // subtract 1 because seat numbers are 1-based
           row.unshift(j - 1);
         }
@@ -250,4 +257,33 @@ export function layoutSections(
 
 function peek(arr: any[]) {
   return arr[arr.length - 1];
+}
+
+export function layoutSingers(
+  singers: Singer[],
+  sectionLayouts: SectionLayout[],
+  sections: Section[]
+): Singer[] {
+  const seatedSingers = [];
+
+  sections.forEach((section, i) => {
+    const sectionLayout = sectionLayouts[i];
+    const sectionSingers = singers
+      // only singers in this section
+      .filter(singer => singer.section === section.title)
+      // tallest singers should be sorted first
+      .sort((a, b) => (a.height > b.height ? -1 : a.height < b.height ? 1 : 0));
+
+    // iterate through each row in section layout and assign singers a seat
+    Object.keys(sectionLayout).forEach(letter => {
+      const seats: number[] = sectionLayout[letter];
+      for (let seatNumber of seats) {
+        const singer = sectionSingers.pop();
+        singer.seat = `${letter}${seatNumber}`;
+        seatedSingers.push(singer);
+      }
+    });
+  });
+
+  return seatedSingers;
 }

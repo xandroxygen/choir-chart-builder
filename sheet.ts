@@ -164,6 +164,26 @@ export function showSectionStacks(
     .setValues(values);
 }
 
+export function getConfirmedSectionStacks(cSections: number, cRows: number) {
+  const [r, c] = references().cells.sectionStacks;
+  const values: number[][] = configurationSheet()
+    .getRange(r + 1, c + 1, cRows, cSections)
+    .getValues();
+
+  // values need to be reversed and inverted for storage
+  // reverse row order
+  values.reverse();
+
+  // invert rows and columns
+  const sectionStacks: number[][] = [];
+  for (let i = 0; i < cSections; i++) {
+    const stack = values.map(row => row[i]);
+    sectionStacks.push(stack);
+  }
+
+  return sectionStacks;
+}
+
 export function saveSectionStacks(sectionStacks: number[][]) {
   const [r, c] = references().cells.data.sectionStacks;
   dataSectionStacksSheet()
