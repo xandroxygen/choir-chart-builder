@@ -1,4 +1,10 @@
-import { SectionTitle, Row, Section, Singer } from "./definitions";
+import {
+  SectionTitle,
+  Row,
+  Section,
+  Singer,
+  SectionLayout
+} from "./definitions";
 
 /**
  * Converts height from "ft-in" to inches.
@@ -128,7 +134,10 @@ export function buildSingers(inputData: string[][]): Singer[] {
   );
 }
 
-export function layoutSections(sectionStacks: number[][], rows: Row[]) {
+export function layoutSections(
+  sectionStacks: number[][],
+  rows: Row[]
+): SectionLayout[] {
   // midpoint of each row is after this seat number
   const madsenMidpoint = {
     J: 18,
@@ -143,7 +152,7 @@ export function layoutSections(sectionStacks: number[][], rows: Row[]) {
 
   // an array of sections, each containing rows,
   // indexed by letter, each containing the seat numbers for that row
-  const sectionSeats = sectionStacks.map(_ =>
+  const sectionLayouts: SectionLayout[] = sectionStacks.map(_ =>
     rows.reduce((ret, row) => {
       ret[row.letter] = [];
       return ret;
@@ -168,7 +177,7 @@ export function layoutSections(sectionStacks: number[][], rows: Row[]) {
       const endPoint = startPoint - stack[j];
       for (let k = endPoint; k < startPoint; k++) {
         // add 1 because seat numbers are 1-based
-        sectionSeats[i][letter].push(k + 1);
+        sectionLayouts[i][letter].push(k + 1);
       }
       startPoints[letter] = endPoint;
     }
@@ -191,7 +200,7 @@ export function layoutSections(sectionStacks: number[][], rows: Row[]) {
       const endPoint = startPoint + stack[j];
       for (let k = startPoint; k < endPoint; k++) {
         // add 1 because seat numbers are 1-based
-        sectionSeats[i][letter].push(k + 1);
+        sectionLayouts[i][letter].push(k + 1);
       }
       startPoints[letter] = endPoint;
     }
@@ -201,46 +210,44 @@ export function layoutSections(sectionStacks: number[][], rows: Row[]) {
   const maxRowSize = 36;
   for (let { letter } of rows) {
     // row is overflowing left, move right
-    const leftOverflow = 1 - sectionSeats[0][letter][0];
+    const leftOverflow = 1 - sectionLayouts[0][letter][0];
     if (leftOverflow > 0) {
-      for (let i = 0; i < sectionSeats.length; i++) {
-        const section = sectionSeats[i][letter];
+      for (let layout of sectionLayouts) {
+        const row = layout[letter] as number[];
 
         // remove overflow from the left
-        section.splice(0, leftOverflow);
+        row.splice(0, leftOverflow);
 
         // add overflow back to the right
-        const lastSeatNumber = section[section.length - 1];
-        for (let j = lastSeatNumber; j < lastSeatNumber + leftOverflow; j++) {
+        for (let j = peek(row); j < peek(row) + leftOverflow; j++) {
           // add 1 because seat numbers are 1-based
-          section.push(j + 1);
+          row.push(j + 1);
         }
       }
     }
 
     // row is overflowing right, move left
-    const lastSection = sectionSeats[sectionSeats.length - 1][letter];
-    const rightOverflow = lastSection[lastSection.length - 1] - maxRowSize;
+    const lastSection = peek(sectionLayouts)[letter] as number[];
+    const rightOverflow = peek(lastSection) - maxRowSize;
     if (rightOverflow > 0) {
-      for (let i = 0; i < sectionSeats.length; i++) {
-        const section = sectionSeats[i][letter];
+      for (let layout of sectionLayouts) {
+        const row = layout[letter] as number[];
 
         // remove overflow from the right
-        section.splice(-rightOverflow, rightOverflow);
+        row.splice(-rightOverflow, rightOverflow);
 
         // add overflow back to the left
-        const firstSeatNumber = section[0];
-        for (
-          let j = firstSeatNumber;
-          j > firstSeatNumber - rightOverflow;
-          j--
-        ) {
+        for (let j = row[0]; j > row[0] - rightOverflow; j--) {
           // subtract 1 because seat numbers are 1-based
-          section.unshift(j - 1);
+          row.unshift(j - 1);
         }
       }
     }
   }
 
-  return sectionSeats;
+  return sectionLayouts;
+}
+
+function peek(arr: any[]) {
+  return arr[arr.length - 1];
 }

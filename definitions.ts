@@ -27,3 +27,14 @@ export interface IncorrectPair {
   forAdding: number;
   forSubtracting: number;
 }
+
+export interface SectionLayout {
+  J?: number[];
+  H?: number[];
+  G?: number[];
+  F?: number[];
+  E?: number[];
+  D?: number[];
+  C?: number[];
+  B?: number[];
+}
