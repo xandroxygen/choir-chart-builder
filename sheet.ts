@@ -22,6 +22,10 @@ export function dataSingersSheet(): GoogleAppsScript.Spreadsheet.Sheet {
   return getSheetByName(references().sheets.Data.Singers);
 }
 
+export function dataSectionStacksSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+  return getSheetByName(references().sheets.Data.SectionStacks);
+}
+
 export function getAvailableRows(): number {
   return parseInt(
     configurationSheet()
@@ -160,6 +164,25 @@ export function showSectionStacks(
     .setValues(values);
 }
 
+export function saveSectionStacks(sectionStacks: number[][]) {
+  const [r, c] = references().cells.data.sectionStacks;
+  dataSectionStacksSheet()
+    .getRange(r, c, sectionStacks.length, sectionStacks[0].length)
+    .setValues(sectionStacks);
+}
+
+export function readSectionStacks(): number[][] {
+  const values = dataSectionStacksSheet()
+    .getDataRange()
+    .getValues();
+
+  // remove header row
+  values.shift();
+
+  // remove first column
+  return values.map(row => row.slice(1));
+}
+
 export function references() {
   const cells = {
     cAvailableRows: "A11",
@@ -169,7 +192,8 @@ export function references() {
     data: {
       rows: [2, 1], //A2
       sections: [2, 1], //A2
-      singers: [2, 1] //A2
+      singers: [2, 1], //A2
+      sectionStacks: [2, 2] //B2
     }
   };
 
@@ -180,7 +204,8 @@ export function references() {
     Data: {
       Rows: `${dataPrefix} Rows`,
       Sections: `${dataPrefix} Sections`,
-      Singers: `${dataPrefix} Singers`
+      Singers: `${dataPrefix} Singers`,
+      SectionStacks: `${dataPrefix} Section Stacks`
     }
   };
 

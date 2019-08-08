@@ -11,9 +11,11 @@ import {
   saveSingers,
   readSections,
   readSingers,
-  showSectionStacks
+  showSectionStacks,
+  readSectionStacks,
+  saveSectionStacks
 } from "./sheet";
-import { buildRows, buildSections, buildSingers } from "./Code";
+import { buildRows, buildSections, buildSingers, layoutSections } from "./Code";
 import { buildSectionStacks } from "./sectionStacks";
 
 function parseInput() {
@@ -55,31 +57,46 @@ function confirmRowCounts() {
   }
 
   saveRows(rows);
+
+  // handle and display section stacks
+  const sections = readSections();
+  const sectionStacks = buildSectionStacks(sections, rows);
+  showSectionStacks(sectionStacks, rows, sections);
+  saveSectionStacks(sectionStacks);
+}
+
+function confirmSectionStacks() {
+  buildChart();
 }
 
 function buildChart() {
   const rows = readRows();
   const sections = readSections();
   const singers = readSingers();
+  const sectionStacks = readSectionStacks();
+
+  // layout section stacks in seats
 }
 
-function generateSectionStacks() {
-  // this should eventually happen right after row counts are confirmed
+function test() {
   const rows = readRows();
   const sections = readSections();
   const sectionStacks = buildSectionStacks(sections, rows);
-  showSectionStacks(sectionStacks, rows, sections);
+  const sectionSeats = layoutSections(sectionStacks, rows);
 }
 
 function onOpenTrigger() {
   const spreadsheet = SpreadsheetApp.getActive();
   spreadsheet.addMenu("Actions", [
-    { name: "Parse input", functionName: "parseInput" },
-    { name: "Confirm row counts", functionName: "confirmRowCounts" },
-    { name: "Build seating chart", functionName: "buildChart" },
+    { name: "1. Read input", functionName: "parseInput" },
     {
-      name: "(temp) Build section stacks",
-      functionName: "generateSectionStacks"
-    }
+      name: "2. Confirm row counts + continue",
+      functionName: "confirmRowCounts"
+    },
+    {
+      name: "3. Confirm seats per section + continue",
+      functionName: "confirmSectionStacks"
+    },
+    { name: "test", functionName: "test" }
   ]);
 }
