@@ -95,6 +95,12 @@ function buildChart() {
   );
 
   SingersFactory.saveSingers(seatedSingers);
+  Sheet().displaySeatingChart(seatedSingers);
+}
+
+function showChart() {
+  const singers = Singers().readSingers();
+  Sheet().displaySeatingChart(singers);
 }
 
 function onOpenTrigger() {
@@ -108,6 +114,10 @@ function onOpenTrigger() {
     {
       name: "3. Confirm seats per section + continue",
       functionName: "confirmSectionStacks"
+    },
+    {
+      name: "Generate seating chart",
+      functionName: "showChart"
     }
   ]);
 }
