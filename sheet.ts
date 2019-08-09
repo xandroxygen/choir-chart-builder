@@ -161,6 +161,60 @@ export function Sheet() {
       .setBackgrounds(colorValues);
   }
 
+  function clearDataSheets() {
+    dataRowsSheet().clear();
+    dataSectionStacksSheet().clear();
+    dataSectionsSheet().clear();
+    dataSingersSheet().clear();
+  }
+
+  function initializeDataSheets() {
+    dataSectionStacksSheet()
+      .getRange("B1:D1")
+      .setValues([["Row 1", "Row 2", "etc"]])
+      .setFontWeight("bold");
+
+    dataSectionStacksSheet()
+      .getRange("A2:A4")
+      .setValues([["Section 1"], ["Section 2"], ["etc"]])
+      .setFontWeight("bold");
+
+    dataSingersSheet()
+      .getRange("A1:E1")
+      .setValues([["First Name", "Last Name", "Section", "Height", "Seat"]])
+      .setFontWeight("bold");
+
+    dataSectionsSheet()
+      .getRange("A1:B1")
+      .setValues([["Section Title", "Count"]])
+      .setFontWeight("bold");
+
+    dataRowsSheet()
+      .getRange("A1:B1")
+      .setValues([["Row", "Seat Count"]])
+      .setFontWeight("bold");
+  }
+
+  function resetConfigurationSheet() {
+    const sheet = configurationSheet();
+    sheet.clear();
+
+    sheet
+      .getRange("A1:B1")
+      .setValues([["Generated Rows", "Seat Counts"]])
+      .setFontWeight("bold");
+
+    sheet
+      .getRange("A10")
+      .setValue("Available Rows")
+      .setFontWeight("bold");
+
+    sheet
+      .getRange("A13")
+      .setValue("Starting Row")
+      .setFontWeight("bold");
+  }
+
   return {
     getSheetByName,
     configurationSheet,
@@ -171,7 +225,12 @@ export function Sheet() {
     getAvailableRows,
     getStartingRow,
     getRowsRange,
-    displaySeatingChart
+    displaySeatingChart,
+    clearDataSheets,
+    initializeDataSheets,
+    resetConfigurationSheet,
+    outputChartSheet,
+    outputListsSheet
   };
 }
 

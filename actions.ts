@@ -103,6 +103,15 @@ function showChart() {
   Sheet().displaySeatingChart(singers);
 }
 
+function reset() {
+  const SheetFactory = Sheet();
+  SheetFactory.clearDataSheets();
+  SheetFactory.initializeDataSheets();
+  SheetFactory.resetConfigurationSheet();
+  SheetFactory.outputChartSheet().clear();
+  SheetFactory.outputListsSheet().clear();
+}
+
 function onOpenTrigger() {
   const spreadsheet = SpreadsheetApp.getActive();
   spreadsheet.addMenu("Actions", [
@@ -118,6 +127,10 @@ function onOpenTrigger() {
     {
       name: "Generate seating chart",
       functionName: "showChart"
+    },
+    {
+      name: "Start over",
+      functionName: "reset"
     }
   ]);
 }
