@@ -1,4 +1,9 @@
 import { Section, Row, IncorrectPair } from "./definitions";
+import {
+  references,
+  configurationSheet,
+  dataSectionStacksSheet
+} from "./sheet";
 
 /**
  * Calculates seats per section per row.
@@ -118,6 +123,10 @@ export function buildSectionStacks(
   // present these changes to the user and let them verify and tweak if needed
   return sectionStacks;
 }
+
+/*
+ * Build helpers
+ */
 
 function findCombinationsForAdjusting(
   forAdding,
@@ -256,4 +265,76 @@ function applySectionPair(
     }
   };
   return reset;
+}
+
+/*
+ * Sheet interface
+ */
+
+export function showSectionStacks(
+  sectionStacks: number[][],
+  rows: Row[],
+  sections: Section[]
+) {
+  const [r, c] = references().cells.sectionStacks;
+  const numRows = 1 + rows.length + 2; // header + rows + total + actual
+  const numColumns = 1 + sections.length + 2; // header + sections + total + actual
+
+  const values: any[][] = [];
+  values.push(["", ...sections.map(s => s.title), "Total", "Actual"]);
+
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const stackRow = sectionStacks.map(stack => stack[i]);
+    const stackTotal = stackRow.reduce((total, num) => total + num, 0);
+    values.push([rows[i].letter, ...stackRow, stackTotal, rows[i].seats]);
+  }
+
+  const stackTotals = sectionStacks.map(stack =>
+    stack.reduce((total, num) => total + num, 0)
+  );
+  values.push(["Total", ...stackTotals, "", ""]);
+  values.push(["Actual", ...sections.map(s => s.count), "", ""]);
+
+  configurationSheet()
+    .getRange(r, c, numRows, numColumns)
+    .setValues(values);
+}
+
+export function getConfirmedSectionStacks(cSections: number, cRows: number) {
+  const [r, c] = references().cells.sectionStacks;
+  const values: number[][] = configurationSheet()
+    .getRange(r + 1, c + 1, cRows, cSections)
+    .getValues();
+
+  // values need to be reversed and inverted for storage
+  // reverse row order
+  values.reverse();
+
+  // invert rows and columns
+  const sectionStacks: number[][] = [];
+  for (let i = 0; i < cSections; i++) {
+    const stack = values.map(row => row[i]);
+    sectionStacks.push(stack);
+  }
+
+  return sectionStacks;
+}
+
+export function saveSectionStacks(sectionStacks: number[][]) {
+  const [r, c] = references().cells.data.sectionStacks;
+  dataSectionStacksSheet()
+    .getRange(r, c, sectionStacks.length, sectionStacks[0].length)
+    .setValues(sectionStacks);
+}
+
+export function readSectionStacks(): number[][] {
+  const values = dataSectionStacksSheet()
+    .getDataRange()
+    .getValues();
+
+  // remove header row
+  values.shift();
+
+  // remove first column
+  return values.map(row => row.slice(1));
 }

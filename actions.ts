@@ -2,28 +2,34 @@ import {
   getSheetByName,
   getStartingRow,
   getAvailableRows,
-  references,
-  getGeneratedRowCounts,
+  references
+} from "./sheet";
+import {
+  buildSectionStacks,
+  showSectionStacks,
+  saveSectionStacks,
+  getConfirmedSectionStacks,
+  readSectionStacks
+} from "./sectionStacks";
+import {
+  buildSingers,
+  saveSingers,
+  readSingers,
+  layoutSingers
+} from "./singers";
+import {
+  buildSections,
+  saveSections,
+  readSections,
+  layoutSections
+} from "./sections";
+import {
+  buildRows,
   setGeneratedRows,
   saveRows,
   readRows,
-  saveSections,
-  saveSingers,
-  readSections,
-  readSingers,
-  showSectionStacks,
-  readSectionStacks,
-  saveSectionStacks,
-  getConfirmedSectionStacks
-} from "./sheet";
-import {
-  buildRows,
-  buildSections,
-  buildSingers,
-  layoutSections,
-  layoutSingers
-} from "./Code";
-import { buildSectionStacks } from "./sectionStacks";
+  getGeneratedRowCounts
+} from "./rows";
 
 function parseInput() {
   const inputRange = getSheetByName(references().sheets.Input).getDataRange();
