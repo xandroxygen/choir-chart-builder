@@ -1,38 +1,18 @@
-import {
-  getSheetByName,
-  getStartingRow,
-  getAvailableRows,
-  references
-} from "./sheet";
-import {
-  buildSectionStacks,
-  showSectionStacks,
-  saveSectionStacks,
-  getConfirmedSectionStacks,
-  readSectionStacks
-} from "./sectionStacks";
-import {
-  buildSingers,
-  saveSingers,
-  readSingers,
-  layoutSingers
-} from "./singers";
-import {
-  buildSections,
-  saveSections,
-  readSections,
-  layoutSections
-} from "./sections";
-import {
-  buildRows,
-  setGeneratedRows,
-  saveRows,
-  readRows,
-  getGeneratedRowCounts
-} from "./rows";
+import { Sheet, references } from "./Sheet";
+import { SectionStacks } from "./SectionStacks";
+import { Singers } from "./Singers";
+import { Sections } from "./Sections";
+import { Rows } from "./Rows";
 
 function parseInput() {
-  const inputRange = getSheetByName(references().sheets.Input).getDataRange();
+  const RowsFactory = Rows();
+  const SectionsFactory = Sections();
+  const SingersFactory = Singers();
+  const SheetFactory = Sheet();
+
+  const inputRange = SheetFactory.getSheetByName(
+    references().sheets.Input
+  ).getDataRange();
 
   // set everything to text format
   inputRange.setNumberFormat("@");
@@ -44,69 +24,77 @@ function parseInput() {
 
   // handle rows
   const total = inputData.length;
-  const availableRows = getAvailableRows();
-  const startingRow = getStartingRow();
-  const rows = buildRows(total, availableRows, startingRow);
+  const availableRows = SheetFactory.getAvailableRows();
+  const startingRow = SheetFactory.getStartingRow();
+  const rows = RowsFactory.buildRows(total, availableRows, startingRow);
 
-  setGeneratedRows(rows);
-  saveRows(rows);
+  RowsFactory.setGeneratedRows(rows);
+  RowsFactory.saveRows(rows);
 
   // handle sections
   const inputSections = inputData.map(inputRow => inputRow[2]);
-  const sections = buildSections(inputSections);
-  saveSections(sections);
+  const sections = SectionsFactory.buildSections(inputSections);
+  SectionsFactory.saveSections(sections);
 
   // handle singers
-  const singers = buildSingers(inputData);
-  saveSingers(singers);
+  const singers = SingersFactory.buildSingers(inputData);
+  SingersFactory.saveSingers(singers);
 }
 
 function confirmRowCounts() {
-  const rows = readRows();
-  const generatedRowCounts = getGeneratedRowCounts();
+  const RowsFactory = Rows();
+  const SectionStacksFactory = SectionStacks();
+
+  const rows = RowsFactory.readRows();
+  const generatedRowCounts = RowsFactory.getGeneratedRowCounts();
 
   for (let i = 0; i < rows.length; i++) {
     rows[i].seats = generatedRowCounts[i];
   }
 
-  saveRows(rows);
+  RowsFactory.saveRows(rows);
 
   // handle and display section stacks
-  const sections = readSections();
-  const sectionStacks = buildSectionStacks(sections, rows);
-  showSectionStacks(sectionStacks, rows, sections);
-  saveSectionStacks(sectionStacks);
+  const sections = Sections().readSections();
+  const sectionStacks = SectionStacksFactory.buildSectionStacks(sections, rows);
+  SectionStacksFactory.showSectionStacks(sectionStacks, rows, sections);
+  SectionStacksFactory.saveSectionStacks(sectionStacks);
 }
 
 function confirmSectionStacks() {
-  const rows = readRows();
-  const sections = readSections();
-  const sectionStacks = getConfirmedSectionStacks(sections.length, rows.length);
+  const SectionStacksFactory = SectionStacks();
 
-  saveSectionStacks(sectionStacks);
+  const rows = Rows().readRows();
+  const sections = Sections().readSections();
+  const sectionStacks = SectionStacksFactory.getConfirmedSectionStacks(
+    sections.length,
+    rows.length
+  );
+
+  SectionStacksFactory.saveSectionStacks(sectionStacks);
 
   buildChart();
 }
 
 function buildChart() {
-  Logger.log("reading rows");
-  const rows = readRows();
-  Logger.log("reading sections");
-  const sections = readSections();
-  Logger.log("reading singers");
-  const singers = readSingers();
-  Logger.log("reading section stacks");
-  const sectionStacks = readSectionStacks();
+  const SectionsFactory = Sections();
+  const SingersFactory = Singers();
+
+  const rows = Rows().readRows();
+  const sections = SectionsFactory.readSections();
+  const singers = SingersFactory.readSingers();
+  const sectionStacks = SectionStacks().readSectionStacks();
 
   // layout section stacks in seats
-  Logger.log("laying out sections");
-  const sectionLayouts = layoutSections(sectionStacks, rows);
+  const sectionLayouts = SectionsFactory.layoutSections(sectionStacks, rows);
 
-  Logger.log("laying out singers");
-  const seatedSingers = layoutSingers(singers, sectionLayouts, sections);
+  const seatedSingers = SingersFactory.layoutSingers(
+    singers,
+    sectionLayouts,
+    sections
+  );
 
-  Logger.log("saving singers");
-  saveSingers(seatedSingers);
+  SingersFactory.saveSingers(seatedSingers);
 }
 
 function onOpenTrigger() {

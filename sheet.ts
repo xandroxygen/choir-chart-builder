@@ -1,51 +1,61 @@
-import { Row, Section, Singer } from "./definitions";
+export function Sheet() {
+  function getSheetByName(name: string): GoogleAppsScript.Spreadsheet.Sheet {
+    return SpreadsheetApp.getActive().getSheetByName(name);
+  }
 
-export function getSheetByName(
-  name: string
-): GoogleAppsScript.Spreadsheet.Sheet {
-  return SpreadsheetApp.getActive().getSheetByName(name);
-}
+  function configurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Configuration);
+  }
 
-export function configurationSheet(): GoogleAppsScript.Spreadsheet.Sheet {
-  return getSheetByName(references().sheets.Configuration);
-}
+  function dataRowsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Data.Rows);
+  }
 
-export function dataRowsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
-  return getSheetByName(references().sheets.Data.Rows);
-}
+  function dataSectionsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Data.Sections);
+  }
 
-export function dataSectionsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
-  return getSheetByName(references().sheets.Data.Sections);
-}
+  function dataSingersSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Data.Singers);
+  }
 
-export function dataSingersSheet(): GoogleAppsScript.Spreadsheet.Sheet {
-  return getSheetByName(references().sheets.Data.Singers);
-}
+  function dataSectionStacksSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Data.SectionStacks);
+  }
 
-export function dataSectionStacksSheet(): GoogleAppsScript.Spreadsheet.Sheet {
-  return getSheetByName(references().sheets.Data.SectionStacks);
-}
+  function getAvailableRows(): number {
+    return parseInt(
+      configurationSheet()
+        .getRange(references().cells.cAvailableRows)
+        .getValue()
+    );
+  }
 
-export function getAvailableRows(): number {
-  return parseInt(
-    configurationSheet()
-      .getRange(references().cells.cAvailableRows)
-      .getValue()
-  );
-}
+  function getStartingRow(): string {
+    return configurationSheet()
+      .getRange(references().cells.startingRow)
+      .getValue();
+  }
 
-export function getStartingRow(): string {
-  return configurationSheet()
-    .getRange(references().cells.startingRow)
-    .getValue();
-}
+  function getRowsRange(
+    r: number,
+    c: number,
+    sheet: GoogleAppsScript.Spreadsheet.Sheet
+  ): GoogleAppsScript.Spreadsheet.Range {
+    return sheet.getRange(r, c, getAvailableRows(), 2);
+  }
 
-export function getRowsRange(
-  r: number,
-  c: number,
-  sheet: GoogleAppsScript.Spreadsheet.Sheet
-): GoogleAppsScript.Spreadsheet.Range {
-  return sheet.getRange(r, c, getAvailableRows(), 2);
+  return {
+    getSheetByName,
+    configurationSheet,
+    dataRowsSheet,
+    dataSectionStacksSheet,
+    dataSectionsSheet,
+    dataSingersSheet,
+    getAvailableRows,
+    getStartingRow,
+    getRowsRange
+  };
 }
 
 export function references() {
