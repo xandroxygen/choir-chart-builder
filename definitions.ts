@@ -45,7 +45,7 @@ export interface SectionLayout {
 export interface Config {
   availableRows: number;
   startingRow: string;
-  sections: {};
+  sections: { title: string; color: string }[][];
 }
 
 export interface FailedUpdate {

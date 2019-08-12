@@ -7,13 +7,15 @@ export function Config() {
       MC: {
         availableRows: 6,
         startingRow: "B",
-        sections: {
-          T2: colors().green,
-          T1: colors().blue,
-          B2: colors().red,
-          B1: colors().yellow
-        }
-      } as Config
+        sections: [
+          [
+            { title: "T2", color: colors().green },
+            { title: "T1", color: colors().blue },
+            { title: "B2", color: colors().red },
+            { title: "B1", color: colors().yellow }
+          ]
+        ]
+      } as Config,
       // WC: {
       //   availableRows: 6,
       //   startingRow: "B",
@@ -24,20 +26,24 @@ export function Config() {
       //     A1: colors().yellow
       //   }
       // } as Config,
-      // CC: {
-      //   availableRows: 4,
-      //   startingRow: "B",
-      //   sections: {
-      //     S1: colors().ltRed,
-      //     S2: colors().red,
-      //     A1: colors().ltYellow,
-      //     A2: colors().yellow,
-      //     T1: colors().ltGreen,
-      //     T2: colors().green,
-      //     B1: colors().ltBlue,
-      //     B2: colors().blue
-      //   }
-      // } as Config
+      CC: {
+        availableRows: 4,
+        startingRow: "B",
+        sections: [
+          [
+            { title: "B1", color: colors().ltBlue },
+            { title: "B2", color: colors().blue },
+            { title: "T1", color: colors().ltGreen },
+            { title: "T2", color: colors().green }
+          ],
+          [
+            { title: "S1", color: colors().ltRed },
+            { title: "S2", color: colors().red },
+            { title: "A1", color: colors().ltYellow },
+            { title: "A2", color: colors().yellow }
+          ]
+        ]
+      } as Config
     };
   }
 
@@ -65,16 +71,28 @@ export function Config() {
 
     sheet.getRange(references().cells.startingRow).setValue(config.startingRow);
 
-    const [r, c] = references().cells.sections;
-    const numRows = Object.keys(config.sections).length;
-    const values = Object.keys(config.sections).map(title => [title, ""]);
-    const backgroundValues = Object.keys(config.sections).map(title => [
-      colors().grey,
-      config.sections[title]
-    ]);
+    const values: string[][] = [];
+    const backgroundValues: string[][] = [];
+    for (let i = 0; i < 4; i++) {
+      values.push([]);
+      backgroundValues.push([]);
+      for (let j = 0; j < 4; j++) {
+        values[i].push("");
+        backgroundValues[i].push(colors().grey);
+      }
+    }
 
+    for (let i = 0; i < config.sections.length; i++) {
+      const row = config.sections[i];
+      for (let j = 0; j < row.length; j++) {
+        values[i][j] = row[j].title;
+        backgroundValues[i][j] = row[j].color;
+      }
+    }
+
+    const [r, c] = references().cells.sections;
     sheet
-      .getRange(r, c, numRows, 2)
+      .getRange(r, c, 4, 4)
       .setValues(values)
       .setBackgrounds(backgroundValues);
   }
@@ -89,7 +107,7 @@ export function Config() {
     const [r, c] = references().cells.sections;
 
     sheet
-      .getRange(r, c, 8, 2)
+      .getRange(r, c, 4, 4)
       .setValue("")
       .setBackground(colors().grey);
   }
