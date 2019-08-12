@@ -3,6 +3,8 @@ import { SectionStacks } from "./SectionStacks";
 import { Singers } from "./Singers";
 import { Sections } from "./Sections";
 import { Rows } from "./Rows";
+import { SeatingChart } from "./SeatingChart";
+import { Config } from "./Config";
 
 function parseInput() {
   const RowsFactory = Rows();
@@ -95,21 +97,52 @@ function buildChart() {
   );
 
   SingersFactory.saveSingers(seatedSingers);
-  Sheet().displaySeatingChart(seatedSingers);
+  showChart();
 }
 
 function showChart() {
+  const seatingChart = SeatingChart();
   const singers = Singers().readSingers();
-  Sheet().displaySeatingChart(singers);
+
+  seatingChart.displayChart(singers);
+  seatingChart.displayFullList(singers);
+  seatingChart.displayListBySection(singers);
+}
+
+function saveChart() {
+  const seatingChart = SeatingChart();
+  const singers = Singers().readSingers();
+  const [updatedSingers, failedUpdates] = seatingChart.readChart(singers);
+
+  Singers().saveSingers(updatedSingers);
+
+  seatingChart.displayChart(updatedSingers);
+  seatingChart.displayFullList(updatedSingers);
+  seatingChart.displayListBySection(updatedSingers);
+  seatingChart.displayFailedUpdates(failedUpdates);
 }
 
 function reset() {
   const SheetFactory = Sheet();
+  Config().clearConfig();
   SheetFactory.clearDataSheets();
   SheetFactory.initializeDataSheets();
-  SheetFactory.resetConfigurationSheet();
   SheetFactory.outputChartSheet().clear();
   SheetFactory.outputListsSheet().clear();
+}
+
+function onEditTrigger(e: GoogleAppsScript.Events.SheetsOnEdit) {
+  if (e.range.getSheet().getName() === references().sheets.Configuration) {
+    if (e.range.getA1Notation() === "C3") {
+      const ConfigFactory = Config();
+      const configChoice = e.range.getValue();
+      const defaultConfig = ConfigFactory.defaultConfigurations()[configChoice];
+
+      defaultConfig
+        ? ConfigFactory.showConfig(defaultConfig)
+        : ConfigFactory.clearConfig();
+    }
+  }
 }
 
 function onOpenTrigger() {
@@ -125,8 +158,8 @@ function onOpenTrigger() {
       functionName: "confirmSectionStacks"
     },
     {
-      name: "Generate seating chart",
-      functionName: "showChart"
+      name: "Save seating chart changes",
+      functionName: "saveChart"
     },
     {
       name: "Start over",

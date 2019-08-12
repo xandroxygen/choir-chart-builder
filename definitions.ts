@@ -41,3 +41,17 @@ export interface SectionLayout {
   C?: number[];
   B?: number[];
 }
+
+export interface Config {
+  availableRows: number;
+  startingRow: string;
+  sections: {};
+}
+
+export interface FailedUpdate {
+  name: string;
+  cell: {
+    r: number;
+    c: number;
+  };
+}
