@@ -1,9 +1,9 @@
-import { Singer, SectionTitle, FailedUpdate } from "./definitions";
+import { Singer, FailedUpdate, SectionConfig } from "./definitions";
 import { Sheet, references } from "./Sheet";
-import { Singers } from "./Singers";
+import { Config } from "./Config";
 
 export function SeatingChart() {
-  function displayChart(singers: Singer[]) {
+  function displayChart(singers: Singer[], sectionConfig: SectionConfig[]) {
     // sort singers into rows, indexed by letter
     const singersByRow = singers.reduce((rows, singer) => {
       if (!rows[singer.seat.row]) {
@@ -42,27 +42,18 @@ export function SeatingChart() {
     const seatNumbers = singers.map(s => s.seat.num);
     const maxSeatNumber = Math.max(...seatNumbers);
     const minSeatNumber = Math.min(...seatNumbers);
+    const blankColor = Config().colors().none;
 
-    const colors = {
-      none: "white",
-      green: "#a8d08d",
-      blue: "#9cc3e6",
-      red: "#ff5050",
-      yellow: "#ffd965"
-    };
-
-    const sectionColors = {
-      [SectionTitle.T2]: colors.green,
-      [SectionTitle.T1]: colors.blue,
-      [SectionTitle.B2]: colors.red,
-      [SectionTitle.B1]: colors.yellow
-    };
+    const sectionColors = sectionConfig.reduce((colors, config) => {
+      colors[config.title] = config.color;
+      return colors;
+    }, {});
 
     const headerRow: any[] = ["", ""];
-    const headerColorRow = [colors.none, colors.none];
+    const headerColorRow = [blankColor, blankColor];
     for (let i = minSeatNumber; i <= maxSeatNumber; i++) {
       headerRow.push(i);
-      headerColorRow.push(colors.none);
+      headerColorRow.push(blankColor);
     }
 
     const values: any[][] = [headerRow];
@@ -73,16 +64,16 @@ export function SeatingChart() {
         maxSeatNumber - row.singers[row.singers.length - 1].seat.num;
 
       const rowValues = [row.letter, row.singers.length];
-      const rowColorValues = [colors.none, colors.none];
+      const rowColorValues = [blankColor, blankColor];
       for (let i = 0; i < leftPadding; i++) {
         rowValues.push("");
-        rowColorValues.push(colors.none);
+        rowColorValues.push(blankColor);
       }
       rowValues.push(...row.singers.map(s => `${s.firstName} ${s.lastName}`));
       rowColorValues.push(...row.singers.map(s => sectionColors[s.section]));
       for (let i = 0; i < rightPadding; i++) {
         rowValues.push("");
-        rowColorValues.push(colors.none);
+        rowColorValues.push(blankColor);
       }
 
       values.push(rowValues);
@@ -95,17 +86,15 @@ export function SeatingChart() {
 
     const sheet = Sheet().outputChartSheet();
 
-    sheet.setRowHeights(1, numRows, 21);
-
-    sheet.getRange(r, c, numRows, 2).setFontWeight("bold");
-
-    sheet.getRange(r, c, 1, numColumns).setFontWeight("bold");
-
     sheet
       .getRange(r, c, numRows, numColumns)
       .setValues(values)
       .setBackgrounds(colorValues)
       .setFontWeight("normal");
+
+    sheet.getRange(r, c, 1, numColumns).setFontWeight("bold");
+    sheet.getRange(r, c, numRows, 2).setFontWeight("bold");
+    sheet.setRowHeights(1, numRows, 21);
   }
 
   function displayFullList(singers: Singer[]) {

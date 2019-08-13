@@ -1,10 +1,4 @@
-import {
-  Section,
-  SectionTitle,
-  Row,
-  SectionLayout,
-  SectionConfig
-} from "./definitions";
+import { Section, Row, SectionLayout, SectionConfig } from "./definitions";
 import { references, Sheet } from "./Sheet";
 
 export function Sections() {

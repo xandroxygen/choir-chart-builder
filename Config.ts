@@ -151,6 +151,10 @@ export function Config() {
     return sections;
   }
 
+  function getFlatSections(): SectionConfig[] {
+    return [].concat(...getSections());
+  }
+
   function getAvailableRows(): number {
     return parseInt(
       Sheet()
@@ -174,6 +178,7 @@ export function Config() {
     clearConfig,
     getAvailableRows,
     getStartingRow,
-    getSections
+    getSections,
+    getFlatSections
   };
 }

@@ -5,7 +5,6 @@ import { Sections } from "./Sections";
 import { Rows } from "./Rows";
 import { SeatingChart } from "./SeatingChart";
 import { Config } from "./Config";
-import { SectionConfig } from "./definitions";
 
 function parseInput() {
   const RowsFactory = Rows();
@@ -35,13 +34,9 @@ function parseInput() {
   RowsFactory.saveRows(rows);
 
   // handle sections
-  const sectionConfig = Config().getSections();
-  const flatSectionConfig: SectionConfig[] = [].concat(...sectionConfig);
+  const sectionConfig = Config().getFlatSections();
   const inputSections = inputData.map(inputRow => inputRow[2]);
-  const sections = SectionsFactory.buildSections(
-    inputSections,
-    flatSectionConfig
-  );
+  const sections = SectionsFactory.buildSections(inputSections, sectionConfig);
   SectionsFactory.saveSections(sections);
 
   // handle singers
@@ -109,8 +104,9 @@ function buildChart() {
 function showChart() {
   const seatingChart = SeatingChart();
   const singers = Singers().readSingers();
+  const sectionConfig = Config().getFlatSections();
 
-  seatingChart.displayChart(singers);
+  seatingChart.displayChart(singers, sectionConfig);
   seatingChart.displayFullList(singers);
   seatingChart.displayListBySection(singers);
 }
@@ -118,11 +114,12 @@ function showChart() {
 function saveChart() {
   const seatingChart = SeatingChart();
   const singers = Singers().readSingers();
+  const sectionConfig = Config().getFlatSections();
   const [updatedSingers, failedUpdates] = seatingChart.readChart(singers);
 
   Singers().saveSingers(updatedSingers);
 
-  seatingChart.displayChart(updatedSingers);
+  seatingChart.displayChart(updatedSingers, sectionConfig);
   seatingChart.displayFullList(updatedSingers);
   seatingChart.displayListBySection(updatedSingers);
   seatingChart.displayFailedUpdates(failedUpdates);
