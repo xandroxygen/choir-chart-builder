@@ -1,5 +1,6 @@
 import { Section, Row, IncorrectPair } from "./definitions";
 import { references, Sheet } from "./Sheet";
+import { Config } from "./Config";
 
 export function SectionStacks() {
   /**
@@ -275,7 +276,7 @@ export function SectionStacks() {
     const numColumns = 1 + sections.length + 2; // header + sections + total + actual
 
     const values: any[][] = [];
-    values.push(["", ...sections.map(s => s.title), "Total", "Actual"]);
+    values.push(["", ...sections.map(s => s.title), "Total", "Desired Total"]);
 
     for (let i = rows.length - 1; i >= 0; i--) {
       const stackRow = sectionStacks.map(stack => stack[i]);
@@ -287,12 +288,17 @@ export function SectionStacks() {
       stack.reduce((total, num) => total + num, 0)
     );
     values.push(["Total", ...stackTotals, "", ""]);
-    values.push(["Actual", ...sections.map(s => s.count), "", ""]);
+    values.push(["Desired Total", ...sections.map(s => s.count), "", ""]);
 
-    Sheet()
-      .configurationSheet()
+    const sheet = Sheet().configurationSheet();
+
+    sheet
       .getRange(r, c, numRows, numColumns)
-      .setValues(values);
+      .setValues(values)
+      .setBackground(Config().colors().grey);
+
+    sheet.getRange(r, c, 1, numColumns).setFontWeight("bold");
+    sheet.getRange(r, c, numRows, 1).setFontWeight("bold");
   }
 
   function getConfirmedSectionStacks(cSections: number, cRows: number) {

@@ -1,4 +1,4 @@
-import { Config } from "./definitions";
+import { Config, SectionConfig } from "./definitions";
 import { Sheet, references } from "./Sheet";
 
 export function Config() {
@@ -71,12 +71,14 @@ export function Config() {
 
     sheet.getRange(references().cells.startingRow).setValue(config.startingRow);
 
+    const [r, c, numRows, numColumns] = references().cells.sections;
     const values: string[][] = [];
     const backgroundValues: string[][] = [];
-    for (let i = 0; i < 4; i++) {
+
+    for (let i = 0; i < numRows; i++) {
       values.push([]);
       backgroundValues.push([]);
-      for (let j = 0; j < 4; j++) {
+      for (let j = 0; j < numColumns; j++) {
         values[i].push("");
         backgroundValues[i].push(colors().grey);
       }
@@ -90,32 +92,88 @@ export function Config() {
       }
     }
 
-    const [r, c] = references().cells.sections;
     sheet
-      .getRange(r, c, 4, 4)
+      .getRange(r, c, numRows, numColumns)
       .setValues(values)
       .setBackgrounds(backgroundValues);
   }
 
   function clearConfig() {
     const sheet = Sheet().configurationSheet();
+    const cellReferences = references().cells;
 
-    sheet.getRange(references().cells.cAvailableRows).setValue("");
+    sheet.getRange(cellReferences.configChoice).setValue("");
 
-    sheet.getRange(references().cells.startingRow).setValue("");
+    sheet.getRange(cellReferences.cAvailableRows).setValue("");
 
-    const [r, c] = references().cells.sections;
+    sheet.getRange(cellReferences.startingRow).setValue("");
+
+    let [r, c, numRows, numColumns] = cellReferences.sections;
 
     sheet
-      .getRange(r, c, 4, 4)
+      .getRange(r, c, numRows, numColumns)
       .setValue("")
       .setBackground(colors().grey);
+
+    [r, c, numRows, numColumns] = cellReferences.cGeneratedRows;
+
+    sheet
+      .getRange(r, c, numRows, numColumns)
+      .setValue("")
+      .setBackground(colors().grey);
+
+    [r, c, numRows, numColumns] = cellReferences.sectionStacks;
+
+    sheet
+      .getRange(r, c, numRows, numColumns)
+      .setValue("")
+      .setBackground(colors().grey);
+  }
+
+  function getSections(): SectionConfig[][] {
+    const [r, c, numRows, numColumns] = references().cells.sections;
+    const range = Sheet()
+      .configurationSheet()
+      .getRange(r, c, numRows, numColumns);
+
+    const values = range.getValues();
+    const colorValues = range.getBackgrounds();
+    const sections: SectionConfig[][] = [];
+
+    for (let i = 0; i < values.length; i++) {
+      sections.push([]);
+      for (let j = 0; j < values[i].length; j++) {
+        if (values[i][j] !== "")
+          sections[i].push({ title: values[i][j], color: colorValues[i][j] });
+      }
+    }
+
+    return sections;
+  }
+
+  function getAvailableRows(): number {
+    return parseInt(
+      Sheet()
+        .configurationSheet()
+        .getRange(references().cells.cAvailableRows)
+        .getValue()
+    );
+  }
+
+  function getStartingRow(): string {
+    return Sheet()
+      .configurationSheet()
+      .getRange(references().cells.startingRow)
+      .getValue();
   }
 
   return {
     defaultConfigurations,
     colors,
     showConfig,
-    clearConfig
+    clearConfig,
+    getAvailableRows,
+    getStartingRow,
+    getSections
   };
 }

@@ -1,5 +1,6 @@
 import { Row } from "./definitions";
 import { references, Sheet } from "./Sheet";
+import { Config } from "./Config";
 
 export function Rows() {
   function buildRows(
@@ -82,12 +83,12 @@ export function Rows() {
   }
 
   function getGeneratedRowCounts(): number[] {
-    const SheetFactory = Sheet();
     const [r, c] = references().cells.cGeneratedRows;
     return (
-      SheetFactory.configurationSheet()
+      Sheet()
+        .configurationSheet()
         // only read the counts, not the letters
-        .getRange(r, c + 1, SheetFactory.getAvailableRows())
+        .getRange(r, c + 1, Config().getAvailableRows())
         .getValues()
         .map(([value]) => value)
         .reverse()

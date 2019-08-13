@@ -5,16 +5,17 @@ import { Sections } from "./Sections";
 import { Rows } from "./Rows";
 import { SeatingChart } from "./SeatingChart";
 import { Config } from "./Config";
+import { SectionConfig } from "./definitions";
 
 function parseInput() {
   const RowsFactory = Rows();
   const SectionsFactory = Sections();
   const SingersFactory = Singers();
-  const SheetFactory = Sheet();
+  const ConfigFactory = Config();
 
-  const inputRange = SheetFactory.getSheetByName(
-    references().sheets.Input
-  ).getDataRange();
+  const inputRange = Sheet()
+    .getSheetByName(references().sheets.Input)
+    .getDataRange();
 
   // set everything to text format
   inputRange.setNumberFormat("@");
@@ -26,16 +27,21 @@ function parseInput() {
 
   // handle rows
   const total = inputData.length;
-  const availableRows = SheetFactory.getAvailableRows();
-  const startingRow = SheetFactory.getStartingRow();
+  const availableRows = ConfigFactory.getAvailableRows();
+  const startingRow = ConfigFactory.getStartingRow();
   const rows = RowsFactory.buildRows(total, availableRows, startingRow);
 
   RowsFactory.setGeneratedRows(rows);
   RowsFactory.saveRows(rows);
 
   // handle sections
+  const sectionConfig = Config().getSections();
+  const flatSectionConfig: SectionConfig[] = [].concat(...sectionConfig);
   const inputSections = inputData.map(inputRow => inputRow[2]);
-  const sections = SectionsFactory.buildSections(inputSections);
+  const sections = SectionsFactory.buildSections(
+    inputSections,
+    flatSectionConfig
+  );
   SectionsFactory.saveSections(sections);
 
   // handle singers
@@ -133,7 +139,7 @@ function reset() {
 
 function onEditTrigger(e: GoogleAppsScript.Events.SheetsOnEdit) {
   if (e.range.getSheet().getName() === references().sheets.Configuration) {
-    if (e.range.getA1Notation() === "C3") {
+    if (e.range.getA1Notation() === references().cells.configChoice) {
       const ConfigFactory = Config();
       const configChoice = e.range.getValue();
       const defaultConfig = ConfigFactory.defaultConfigurations()[configChoice];

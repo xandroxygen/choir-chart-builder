@@ -1,4 +1,4 @@
-import { Singer, Row, SectionTitle } from "./definitions";
+import { Config } from "./Config";
 
 export function Sheet() {
   function getSheetByName(name: string): GoogleAppsScript.Spreadsheet.Sheet {
@@ -33,26 +33,12 @@ export function Sheet() {
     return getSheetByName(references().sheets.Output.Lists);
   }
 
-  function getAvailableRows(): number {
-    return parseInt(
-      configurationSheet()
-        .getRange(references().cells.cAvailableRows)
-        .getValue()
-    );
-  }
-
-  function getStartingRow(): string {
-    return configurationSheet()
-      .getRange(references().cells.startingRow)
-      .getValue();
-  }
-
   function getRowsRange(
     r: number,
     c: number,
     sheet: GoogleAppsScript.Spreadsheet.Sheet
   ): GoogleAppsScript.Spreadsheet.Range {
-    return sheet.getRange(r, c, getAvailableRows(), 2);
+    return sheet.getRange(r, c, Config().getAvailableRows(), 2);
   }
 
   function clearDataSheets() {
@@ -116,8 +102,6 @@ export function Sheet() {
     dataSectionStacksSheet,
     dataSectionsSheet,
     dataSingersSheet,
-    getAvailableRows,
-    getStartingRow,
     getRowsRange,
     clearDataSheets,
     initializeDataSheets,
@@ -129,11 +113,12 @@ export function Sheet() {
 
 export function references() {
   const cells = {
+    configChoice: "C3",
     cAvailableRows: "C6",
     startingRow: "C9",
-    sections: [12, 3], //C12
-    cGeneratedRows: [2, 1],
-    sectionStacks: [1, 4], //D1
+    sections: [12, 3, 4, 4], //C12:F15
+    cGeneratedRows: [20, 3, 12, 2], //C20:D31
+    sectionStacks: [36, 3, 10, 7], //C36:I45
     output: {
       chart: [1, 1], //A1
       fullList: [1, 1], //A1

@@ -1,30 +1,26 @@
-import { Section, SectionTitle, Row, SectionLayout } from "./definitions";
+import {
+  Section,
+  SectionTitle,
+  Row,
+  SectionLayout,
+  SectionConfig
+} from "./definitions";
 import { references, Sheet } from "./Sheet";
 
 export function Sections() {
-  function buildSections(inputSections: string[]): Section[] {
-    const sections = {
-      [SectionTitle.T2]: {
-        title: SectionTitle.T2,
+  function buildSections(
+    inputSections: string[],
+    sectionConfig: SectionConfig[]
+  ): Section[] {
+    const sections = sectionConfig.reduce((sections, { title }) => {
+      sections[title] = {
+        title,
         count: 0
-      } as Section,
-      [SectionTitle.T1]: {
-        title: SectionTitle.T1,
-        count: 0
-      } as Section,
-      [SectionTitle.B2]: {
-        title: SectionTitle.B2,
-        count: 0
-      } as Section,
-      [SectionTitle.B1]: {
-        title: SectionTitle.B1,
-        count: 0
-      } as Section
-    };
+      };
+      return sections;
+    }, {});
 
-    inputSections.forEach(
-      inputSection => (sections[inputSection as SectionTitle].count += 1)
-    );
+    inputSections.forEach(title => (sections[title].count += 1));
 
     return Object.keys(sections).map(k => sections[k]);
   }
