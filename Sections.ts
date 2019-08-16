@@ -1,5 +1,6 @@
 import { Section, Row, SectionLayout, SectionConfig } from "./definitions";
 import { references, Sheet } from "./Sheet";
+import { Config } from "./Config";
 
 export function Sections() {
   function buildSections(
@@ -20,6 +21,65 @@ export function Sections() {
   }
 
   function layoutSections(
+    sectionStacks: number[][],
+    rows: Row[]
+  ): SectionLayout[] {
+    return Config().configIsCC()
+      ? layoutSectionsInTwoRows(sectionStacks, rows)
+      : layoutSectionsInOneRow(sectionStacks, rows);
+  }
+
+  function layoutSectionsInTwoRows(
+    sectionStacks: number[][],
+    rows: Row[]
+  ): SectionLayout[] {
+    // midpoint of each row is after this seat number
+    const madsenMidpoint = {
+      J: 18,
+      H: 18,
+      G: 18,
+      F: 17,
+      E: 17,
+      D: 17,
+      C: 16,
+      B: 16
+    };
+
+    // an array of sections, each containing rows,
+    // indexed by letter, each containing the seat numbers for that row
+    const sectionLayouts: SectionLayout[] = sectionStacks.map(_ =>
+      rows.reduce((ret, row) => {
+        ret[row.letter] = [];
+        return ret;
+      }, {})
+    );
+
+    let startPoints = {};
+    for (let row of rows) {
+      startPoints[row.letter] =
+        madsenMidpoint[row.letter] - Math.ceil(row.seats / 2);
+    }
+
+    for (let i = 0; i < sectionStacks.length; i++) {
+      const stack = sectionStacks[i];
+      for (let j = 0; j < stack.length; j++) {
+        if (stack[j] > 0) {
+          const letter = rows[j].letter;
+          const startPoint = startPoints[letter];
+          const endPoint = startPoint + stack[j];
+          for (let k = startPoint; k < endPoint; k++) {
+            // add 1 because seat numbers are 1-based
+            sectionLayouts[i][letter].push(k + 1);
+          }
+          startPoints[letter] = endPoint;
+        }
+      }
+    }
+
+    return sectionLayouts;
+  }
+
+  function layoutSectionsInOneRow(
     sectionStacks: number[][],
     rows: Row[]
   ): SectionLayout[] {

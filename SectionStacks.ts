@@ -11,17 +11,14 @@ export function SectionStacks() {
    * - the incorrect sections will always be 1 off either way
    * - the number of positive incorrect sections will match the negative
    * - there will be an even number of incorrect rows
+   * - there will either be one or two rows of sections
    *
    * @param sections
    * @param rows
    */
   function buildSectionStacks(sections: Section[], rows: Row[]): number[][] {
-    const total: number = sections.reduce((total, s) => total + s.count, 0);
-
     // 1st dimension is sections, 2nd is rows
-    const sectionStacks: number[][] = sections
-      .map(section => section.count / total)
-      .map(proportion => rows.map(row => Math.round(proportion * row.seats)));
+    const sectionStacks = buildInitialSectionStacks(sections, rows);
 
     const [rowsForAdding, rowsForSubtracting] = rows.reduce(
       ([forAdding, forSubtracting], row, i) => {
@@ -59,27 +56,16 @@ export function SectionStacks() {
       [[], []] as [number[], number[]] // initial return values
     );
 
-    // to solve this problem just think about:
-    //    rows to add, sections to add, rows to subtract, sections to subtract
-    // and all possible combos of those
-    // ie rows to add: 2,4
-    // rows to subtract: 3,5
-    // sections to add: 0, 2
-    // sections to subtract: 1, 3
-    // combos:
-    // - s 0,1 2,3 r 2,3 4,5
-    // - s 0,1 2,3 r 2,5 4,3
-    // - s 0,3 2,1 r 2,3 4,5
-    // - s 0,3 2,1 r 2,5 4,3
-
-    const rowCombinationsForAdjusting = findCombinationsForAdjusting(
+    const {
+      rowCombinationsForAdjusting,
+      sectionCombinationsForAdjusting
+    } = buildCombinations(
       rowsForAdding,
-      rowsForSubtracting
-    );
-
-    const sectionCombinationsForAdjusting = findCombinationsForAdjusting(
+      rowsForSubtracting,
       sectionsForAdding,
-      sectionsForSubtracting
+      sectionsForSubtracting,
+      rows,
+      sectionStacks
     );
 
     for (let rowCombo of rowCombinationsForAdjusting) {
@@ -122,6 +108,131 @@ export function SectionStacks() {
   /*
    * Build helpers
    */
+
+  function buildInitialSectionStacks(
+    sections: Section[],
+    rows: Row[]
+  ): number[][] {
+    const sectionConfig = Config().getSections();
+    const configIsCC = Config().configIsCC();
+    const total: number = sections.reduce((total, s) => total + s.count, 0);
+    const rowMidpoint = Math.ceil(rows.length / 2);
+
+    if (Config().configIsMC() || Config().configIsWC()) {
+      return sections
+        .map(section => section.count / total)
+        .map(proportion => rows.map(row => Math.round(proportion * row.seats)));
+    } else if (configIsCC) {
+      // split the rows in half, and create section stacks for each half in the same way
+      const topHalfSections = sectionConfig[0].map(config => config.title);
+
+      return sections.map(section => {
+        const isTopHalfSection = topHalfSections.indexOf(section.title) > -1;
+        const proportion = (section.count / total) * 2;
+        return rows.map((row, index) => {
+          const isTopHalfRow = index >= rowMidpoint;
+          return (isTopHalfRow && isTopHalfSection) ||
+            (!isTopHalfRow && !isTopHalfSection)
+            ? Math.round(proportion * row.seats)
+            : 0;
+        });
+      });
+    } else {
+      throw new Error(
+        "Currently, only two rows of sections are supported in the section order"
+      );
+    }
+  }
+
+  function buildCombinations(
+    rowsForAdding: number[],
+    rowsForSubtracting: number[],
+    sectionsForAdding: number[],
+    sectionsForSubtracting: number[],
+    rows: Row[],
+    sectionStacks: number[][]
+  ): {
+    rowCombinationsForAdjusting: any[];
+    sectionCombinationsForAdjusting: any[];
+  } {
+    const rowMidpoint = Math.ceil(rows.length / 2);
+    const sectionStackMidpoint = Math.ceil(sectionStacks.length / 2);
+
+    // to solve this problem just think about:
+    //    rows to add, sections to add, rows to subtract, sections to subtract
+    // and all possible combos of those
+    // ie rows to add: 2,4
+    // rows to subtract: 3,5
+    // sections to add: 0, 2
+    // sections to subtract: 1, 3
+    // combos:
+    // - s 0,1 2,3 r 2,3 4,5
+    // - s 0,1 2,3 r 2,5 4,3
+    // - s 0,3 2,1 r 2,3 4,5
+    // - s 0,3 2,1 r 2,5 4,3
+
+    if (Config().configIsCC()) {
+      const [topHalfRowsForAdding, bottomHalfRowsForAdding] = getHalves(
+        rowsForAdding,
+        rowMidpoint
+      );
+
+      const [
+        topHalfRowsForSubtracting,
+        bottomHalfRowsForSubtracting
+      ] = getHalves(rowsForSubtracting, rowMidpoint);
+
+      const [topHalfSectionsForAdding, bottomHalfSectionsForAdding] = getHalves(
+        sectionsForAdding,
+        sectionStackMidpoint
+      );
+
+      const [
+        topHalfSectionsForSubtracting,
+        bottomHalfSectionsForSubtracting
+      ] = getHalves(sectionsForSubtracting, sectionStackMidpoint);
+
+      return {
+        rowCombinationsForAdjusting: [
+          ...findCombinationsForAdjusting(
+            topHalfRowsForAdding,
+            topHalfRowsForSubtracting
+          ),
+          ...findCombinationsForAdjusting(
+            bottomHalfRowsForAdding,
+            bottomHalfRowsForSubtracting
+          )
+        ],
+
+        sectionCombinationsForAdjusting: [
+          ...findCombinationsForAdjusting(
+            topHalfSectionsForAdding,
+            topHalfSectionsForSubtracting
+          ),
+          ...findCombinationsForAdjusting(
+            bottomHalfSectionsForAdding,
+            bottomHalfSectionsForSubtracting
+          )
+        ]
+      };
+    } else {
+      return {
+        rowCombinationsForAdjusting: findCombinationsForAdjusting(
+          rowsForAdding,
+          rowsForSubtracting
+        ),
+
+        sectionCombinationsForAdjusting: findCombinationsForAdjusting(
+          sectionsForAdding,
+          sectionsForSubtracting
+        )
+      };
+    }
+  }
+
+  function getHalves(arr, mid): [any[], any[]] {
+    return [arr.filter(a => a < mid), arr.filter(a => a >= mid)];
+  }
 
   function findCombinationsForAdjusting(
     forAdding,
