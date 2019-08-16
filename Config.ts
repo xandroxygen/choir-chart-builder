@@ -148,7 +148,7 @@ export function Config() {
       }
     }
 
-    return sections;
+    return sections.filter(s => s.length > 0);
   }
 
   function getFlatSections(): SectionConfig[] {
@@ -171,6 +171,25 @@ export function Config() {
       .getValue();
   }
 
+  function getConfigChoice(): string {
+    return Sheet()
+      .configurationSheet()
+      .getRange(references().cells.configChoice)
+      .getValue();
+  }
+
+  function configIsCC(): boolean {
+    return getConfigChoice() === "CC";
+  }
+
+  function configIsMC(): boolean {
+    return getConfigChoice() === "MC";
+  }
+
+  function configIsWC(): boolean {
+    return getConfigChoice() === "WC";
+  }
+
   return {
     defaultConfigurations,
     colors,
@@ -179,6 +198,9 @@ export function Config() {
     getAvailableRows,
     getStartingRow,
     getSections,
-    getFlatSections
+    getFlatSections,
+    configIsCC,
+    configIsMC,
+    configIsWC
   };
 }

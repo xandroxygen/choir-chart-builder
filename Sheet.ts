@@ -95,6 +95,11 @@ export function Sheet() {
       .setFontWeight("bold");
   }
 
+  function getCharColumn(c: number) {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    return alphabet[c - 1];
+  }
+
   return {
     getSheetByName,
     configurationSheet,
@@ -107,7 +112,8 @@ export function Sheet() {
     initializeDataSheets,
     resetConfigurationSheet,
     outputChartSheet,
-    outputListsSheet
+    outputListsSheet,
+    getCharColumn
   };
 }
 
@@ -118,7 +124,7 @@ export function references() {
     startingRow: "C9",
     sections: [12, 3, 4, 4], //C12:F15
     cGeneratedRows: [20, 3, 12, 2], //C20:D31
-    sectionStacks: [36, 3, 10, 7], //C36:I45
+    sectionStacks: [36, 3, 10, 11], //C36:M45
     output: {
       chart: [1, 1], //A1
       fullList: [1, 1], //A1
