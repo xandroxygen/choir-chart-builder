@@ -33,19 +33,22 @@ export function Rows() {
       rows[availableRows - i].seats += 1;
     }
 
+    // for MC and WC,
     // create gaps of 2 between rows
-    for (let i = 0; i < availableRows; i++) {
-      // offset = (i - middle index) * 2
-      // ^ this works for arrays with odd length
-      // offset = ((i - index of middle floored) * 2) - 1
-      const middleIndex = Math.floor((availableRows - 1) / 2);
+    if (!Config().configIsCC()) {
+      for (let i = 0; i < availableRows; i++) {
+        // offset = (i - middle index) * 2
+        // ^ this works for arrays with odd length
+        // offset = ((i - index of middle floored) * 2) - 1
+        const middleIndex = Math.floor((availableRows - 1) / 2);
 
-      // for odd-length arrays, the middle index should be offset at 0
-      // for even-length arrays, the "middle" index should be floored,
-      // and the offset should start at -1
-      const offset = (i - middleIndex) * 2 - 1;
+        // for odd-length arrays, the middle index should be offset at 0
+        // for even-length arrays, the "middle" index should be floored,
+        // and the offset should start at -1
+        const offset = (i - middleIndex) * 2 - 1;
 
-      rows[i].seats += offset;
+        rows[i].seats += offset;
+      }
     }
 
     // check for overflow beyond max row size
