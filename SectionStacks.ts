@@ -162,6 +162,10 @@ export function SectionStacks() {
     sectionStacks: number[][],
     rows: Row[]
   ): Function {
+    if (rowPair.forAdding == null || rowPair.forSubtracting == null) {
+      return () => {};
+    }
+
     let adjustedColumnIndex: number;
     for (let k = 0; k < sectionStacks.length; k++) {
       // apply both changes
@@ -222,6 +226,10 @@ export function SectionStacks() {
     sectionStacks: number[][],
     rows: Row[]
   ): Function {
+    if (sectionPair.forAdding == null || sectionPair.forSubtracting == null) {
+      return () => {};
+    }
+
     let adjustedRowIndex: number;
     const sectionForSubtracting = sectionStacks[sectionPair.forSubtracting];
     const sectionForAdding = sectionStacks[sectionPair.forAdding];
@@ -278,16 +286,31 @@ export function SectionStacks() {
     const values: any[][] = [];
     values.push(["", ...sections.map(s => s.title), "Total", "Desired Total"]);
 
+    const startingRow = r + 1;
+    const startingColumn = c + 1;
+    const startingColumnChar = Sheet().getCharColumn(startingColumn);
+    const column = Sheet().getCharColumn(
+      startingColumn + sectionStacks.length - 1
+    );
     for (let i = rows.length - 1; i >= 0; i--) {
       const stackRow = sectionStacks.map(stack => stack[i]);
-      const stackTotal = stackRow.reduce((total, num) => total + num, 0);
-      values.push([rows[i].letter, ...stackRow, stackTotal, rows[i].seats]);
+      const row = startingRow + (rows.length - 1 - i);
+      values.push([
+        rows[i].letter,
+        ...stackRow,
+        `=SUM(${startingColumnChar}${row}:${column}${row})`,
+        rows[i].seats
+      ]);
     }
 
-    const stackTotals = sectionStacks.map(stack =>
-      stack.reduce((total, num) => total + num, 0)
-    );
-    values.push(["Total", ...stackTotals, "", ""]);
+    const totalEquations = sectionStacks.map((_, i) => {
+      const row = startingRow + rows.length - 1;
+      const column = Sheet().getCharColumn(startingColumn + i);
+
+      return `=SUM(${column}${startingRow}:${column}${row})`;
+    });
+
+    values.push(["Total", ...totalEquations, "", ""]);
     values.push(["Desired Total", ...sections.map(s => s.count), "", ""]);
 
     const sheet = Sheet().configurationSheet();
