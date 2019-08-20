@@ -12,7 +12,7 @@ export function Rows() {
     const startingRowIndex = alphabet.indexOf(startingRow.toUpperCase());
 
     if (startingRowIndex === -1) {
-      throw Error("startingRow must be one letter");
+      throw new Error("Starting row must be one letter, check input.");
     }
 
     // get letters for each needed row
@@ -36,38 +36,46 @@ export function Rows() {
     // for MC and WC,
     // create gaps of 2 between rows
     if (!Config().configIsCC()) {
-      for (let i = 0; i < availableRows; i++) {
-        // offset = (i - middle index) * 2
-        // ^ this works for arrays with odd length
-        // offset = ((i - index of middle floored) * 2) - 1
-        const middleIndex = Math.floor((availableRows - 1) / 2);
+      try {
+        for (let i = 0; i < availableRows; i++) {
+          // offset = (i - middle index) * 2
+          // ^ this works for arrays with odd length
+          // offset = ((i - index of middle floored) * 2) - 1
+          const middleIndex = Math.floor((availableRows - 1) / 2);
 
-        // for odd-length arrays, the middle index should be offset at 0
-        // for even-length arrays, the "middle" index should be floored,
-        // and the offset should start at -1
-        const offset = (i - middleIndex) * 2 - 1;
+          // for odd-length arrays, the middle index should be offset at 0
+          // for even-length arrays, the "middle" index should be floored,
+          // and the offset should start at -1
+          const offset = (i - middleIndex) * 2 - 1;
 
-        rows[i].seats += offset;
+          rows[i].seats += offset;
+        }
+      } catch (e) {
+        Sheet().alert(`Adding gaps of 2 between rows failed: ${e.message}`);
       }
     }
 
     // check for overflow beyond max row size
     // start with the top row and bump down overflow
-    const maxRowSize = 36;
-    for (let i = availableRows - 1; i >= 0; i--) {
-      if (rows[i].seats > maxRowSize) {
-        if (i == 0) {
-          // if the bottom row is overflowing, we have a problem
-          throw new Error(
-            "Number of rows and number of available seats isn't enough to contain everyone."
-          );
-        }
+    try {
+      const maxRowSize = 36;
+      for (let i = availableRows - 1; i >= 0; i--) {
+        if (rows[i].seats > maxRowSize) {
+          if (i == 0) {
+            // if the bottom row is overflowing, we have a problem
+            throw new Error(
+              "Number of rows and number of available seats isn't enough to contain everyone."
+            );
+          }
 
-        // bump overflow down to the previous row
-        const overflow = rows[i].seats - maxRowSize;
-        rows[i].seats -= overflow;
-        rows[i - 1].seats += overflow;
+          // bump overflow down to the previous row
+          const overflow = rows[i].seats - maxRowSize;
+          rows[i].seats -= overflow;
+          rows[i - 1].seats += overflow;
+        }
       }
+    } catch (e) {
+      Sheet().alert(`Keeping rows within max size failed: ${e.message}`);
     }
 
     return rows;
@@ -87,15 +95,23 @@ export function Rows() {
 
   function getGeneratedRowCounts(): number[] {
     const [r, c] = references().cells.cGeneratedRows;
-    return (
-      Sheet()
-        .configurationSheet()
-        // only read the counts, not the letters
-        .getRange(r, c + 1, Config().getAvailableRows())
-        .getValues()
-        .map(([value]) => value)
-        .reverse()
-    );
+    const rowCounts = Sheet()
+      .configurationSheet()
+      // only read the counts, not the letters
+      .getRange(r, c + 1, Config().getAvailableRows())
+      .getValues()
+      .map(([value]) => parseInt(value))
+      // row counts were displayed top of Madsen to bottom
+      .reverse();
+
+    // check if every read count is a number
+    if (rowCounts.some(isNaN)) {
+      throw new Error(
+        "Make sure every row count cell contains a number and try again."
+      );
+    }
+
+    return rowCounts;
   }
 
   function saveRows(rows: Row[]) {

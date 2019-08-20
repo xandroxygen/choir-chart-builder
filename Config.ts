@@ -16,16 +16,18 @@ export function Config() {
           ]
         ]
       } as Config,
-      // WC: {
-      //   availableRows: 6,
-      //   startingRow: "B",
-      //   sections: {
-      //     S2: colors().green,
-      //     S1: colors().blue,
-      //     A2: colors().red,
-      //     A1: colors().yellow
-      //   }
-      // } as Config,
+      WC: {
+        availableRows: 6,
+        startingRow: "B",
+        sections: [
+          [
+            { title: "S2", color: colors().green },
+            { title: "S1", color: colors().blue },
+            { title: "A2", color: colors().red },
+            { title: "A1", color: colors().yellow }
+          ]
+        ]
+      } as Config,
       CC: {
         availableRows: 4,
         startingRow: "B",

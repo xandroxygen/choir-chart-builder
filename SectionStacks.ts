@@ -24,7 +24,7 @@ export function SectionStacks() {
       ([forAdding, forSubtracting], row, i) => {
         // sum up calculated row from stacks
         const rowCount = sectionStacks.reduce(
-          (total, stack) => total + stack[i],
+          (sum, stack) => sum + stack[i],
           0
         );
 
@@ -72,10 +72,10 @@ export function SectionStacks() {
       for (let sectionCombo of sectionCombinationsForAdjusting) {
         // adjust stacks
         const resetAllRows = rowCombo.map(pair =>
-          applyRowPair(pair, sectionStacks, rows)
+          applyRowPair(pair, sectionStacks)
         );
         const resetAllSections = sectionCombo.map(pair =>
-          applySectionPair(pair, sectionStacks, rows)
+          applySectionPair(pair, sectionStacks)
         );
 
         const areRowsFull = rows
@@ -155,77 +155,88 @@ export function SectionStacks() {
     rowCombinationsForAdjusting: any[];
     sectionCombinationsForAdjusting: any[];
   } {
-    const rowMidpoint = Math.ceil(rows.length / 2);
-    const sectionStackMidpoint = Math.ceil(sectionStacks.length / 2);
+    try {
+      const rowMidpoint = Math.ceil(rows.length / 2);
+      const sectionStackMidpoint = Math.ceil(sectionStacks.length / 2);
 
-    // to solve this problem just think about:
-    //    rows to add, sections to add, rows to subtract, sections to subtract
-    // and all possible combos of those
-    // ie rows to add: 2,4
-    // rows to subtract: 3,5
-    // sections to add: 0, 2
-    // sections to subtract: 1, 3
-    // combos:
-    // - s 0,1 2,3 r 2,3 4,5
-    // - s 0,1 2,3 r 2,5 4,3
-    // - s 0,3 2,1 r 2,3 4,5
-    // - s 0,3 2,1 r 2,5 4,3
+      // to solve this problem just think about:
+      //    rows to add, sections to add, rows to subtract, sections to subtract
+      // and all possible combos of those
+      // ie rows to add: 2,4
+      // rows to subtract: 3,5
+      // sections to add: 0, 2
+      // sections to subtract: 1, 3
+      // combos:
+      // - s 0,1 2,3 r 2,3 4,5
+      // - s 0,1 2,3 r 2,5 4,3
+      // - s 0,3 2,1 r 2,3 4,5
+      // - s 0,3 2,1 r 2,5 4,3
 
-    if (Config().configIsCC()) {
-      const [topHalfRowsForAdding, bottomHalfRowsForAdding] = getHalves(
-        rowsForAdding,
-        rowMidpoint
-      );
-
-      const [
-        topHalfRowsForSubtracting,
-        bottomHalfRowsForSubtracting
-      ] = getHalves(rowsForSubtracting, rowMidpoint);
-
-      const [topHalfSectionsForAdding, bottomHalfSectionsForAdding] = getHalves(
-        sectionsForAdding,
-        sectionStackMidpoint
-      );
-
-      const [
-        topHalfSectionsForSubtracting,
-        bottomHalfSectionsForSubtracting
-      ] = getHalves(sectionsForSubtracting, sectionStackMidpoint);
-
-      return {
-        rowCombinationsForAdjusting: [
-          ...findCombinationsForAdjusting(
-            topHalfRowsForAdding,
-            topHalfRowsForSubtracting
-          ),
-          ...findCombinationsForAdjusting(
-            bottomHalfRowsForAdding,
-            bottomHalfRowsForSubtracting
-          )
-        ],
-
-        sectionCombinationsForAdjusting: [
-          ...findCombinationsForAdjusting(
-            topHalfSectionsForAdding,
-            topHalfSectionsForSubtracting
-          ),
-          ...findCombinationsForAdjusting(
-            bottomHalfSectionsForAdding,
-            bottomHalfSectionsForSubtracting
-          )
-        ]
-      };
-    } else {
-      return {
-        rowCombinationsForAdjusting: findCombinationsForAdjusting(
+      if (Config().configIsCC()) {
+        const [topHalfRowsForAdding, bottomHalfRowsForAdding] = getHalves(
           rowsForAdding,
-          rowsForSubtracting
-        ),
+          rowMidpoint
+        );
 
-        sectionCombinationsForAdjusting: findCombinationsForAdjusting(
-          sectionsForAdding,
-          sectionsForSubtracting
-        )
+        const [
+          topHalfRowsForSubtracting,
+          bottomHalfRowsForSubtracting
+        ] = getHalves(rowsForSubtracting, rowMidpoint);
+
+        const [
+          topHalfSectionsForAdding,
+          bottomHalfSectionsForAdding
+        ] = getHalves(sectionsForAdding, sectionStackMidpoint);
+
+        const [
+          topHalfSectionsForSubtracting,
+          bottomHalfSectionsForSubtracting
+        ] = getHalves(sectionsForSubtracting, sectionStackMidpoint);
+
+        return {
+          rowCombinationsForAdjusting: [
+            ...findCombinationsForAdjusting(
+              topHalfRowsForAdding,
+              topHalfRowsForSubtracting
+            ),
+            ...findCombinationsForAdjusting(
+              bottomHalfRowsForAdding,
+              bottomHalfRowsForSubtracting
+            )
+          ],
+
+          sectionCombinationsForAdjusting: [
+            ...findCombinationsForAdjusting(
+              topHalfSectionsForAdding,
+              topHalfSectionsForSubtracting
+            ),
+            ...findCombinationsForAdjusting(
+              bottomHalfSectionsForAdding,
+              bottomHalfSectionsForSubtracting
+            )
+          ]
+        };
+      } else {
+        return {
+          rowCombinationsForAdjusting: findCombinationsForAdjusting(
+            rowsForAdding,
+            rowsForSubtracting
+          ),
+
+          sectionCombinationsForAdjusting: findCombinationsForAdjusting(
+            sectionsForAdding,
+            sectionsForSubtracting
+          )
+        };
+      }
+    } catch (e) {
+      Sheet().alert(
+        `Some calculations went wrong, and section counts per row will not be adjusted automatically.
+        Please adjust them manually, following the guidelines given.`
+      );
+      return {
+        rowCombinationsForAdjusting: [],
+        sectionCombinationsForAdjusting: []
       };
     }
   }
@@ -270,48 +281,54 @@ export function SectionStacks() {
    */
   function applyRowPair(
     rowPair: IncorrectPair,
-    sectionStacks: number[][],
-    rows: Row[]
+    sectionStacks: number[][]
   ): Function {
     if (rowPair.forAdding == null || rowPair.forSubtracting == null) {
       return () => {};
     }
 
     let adjustedColumnIndex: number;
-    for (let k = 0; k < sectionStacks.length; k++) {
-      // apply both changes
-      sectionStacks[k][rowPair.forAdding] += 1;
-      sectionStacks[k][rowPair.forSubtracting] -= 1;
+    try {
+      for (let k = 0; k < sectionStacks.length; k++) {
+        // apply both changes
+        sectionStacks[k][rowPair.forAdding] += 1;
+        sectionStacks[k][rowPair.forSubtracting] -= 1;
 
-      // check if both changes are valid
-      const isPossibleColumn: boolean = [
-        rowPair.forAdding,
-        rowPair.forSubtracting
-      ].every(l => {
-        const isTopRow = l === rows.length - 1;
-        const isBottomRow = l === 0;
-        const rowValue = sectionStacks[k][l];
+        // check if both changes are valid
+        const isPossibleColumn: boolean = [
+          rowPair.forAdding,
+          rowPair.forSubtracting
+        ].every(l => {
+          const isTopRow = l === sectionStacks[k].length - 1;
+          const isBottomRow = l === 0;
+          const rowValue = sectionStacks[k][l];
 
-        const isGteRowBelow =
-          isBottomRow || rowValue >= sectionStacks[k][l - 1];
-        const isCloseToRowBelow =
-          isBottomRow || rowValue - sectionStacks[k][l - 1] < 2;
-        const isLteRowAbove = isTopRow || rowValue <= sectionStacks[k][l + 1];
-        const isCloseToRowAbove =
-          isTopRow || sectionStacks[k][l + 1] - rowValue < 2;
+          const isGteRowBelow =
+            isBottomRow || rowValue >= sectionStacks[k][l - 1];
+          const isCloseToRowBelow =
+            isBottomRow || rowValue - sectionStacks[k][l - 1] < 2;
+          const isLteRowAbove = isTopRow || rowValue <= sectionStacks[k][l + 1];
+          const isCloseToRowAbove =
+            isTopRow || sectionStacks[k][l + 1] - rowValue < 2;
 
-        return isGteRowBelow && isLteRowAbove;
-      });
+          return isGteRowBelow && isLteRowAbove;
+        });
 
-      if (isPossibleColumn) {
-        // use these changes
-        adjustedColumnIndex = k;
-        break;
-      } else {
-        // reset these changes
-        sectionStacks[k][rowPair.forAdding] -= 1;
-        sectionStacks[k][rowPair.forSubtracting] += 1;
+        if (isPossibleColumn) {
+          // use these changes
+          adjustedColumnIndex = k;
+          break;
+        } else {
+          // reset these changes
+          sectionStacks[k][rowPair.forAdding] -= 1;
+          sectionStacks[k][rowPair.forSubtracting] += 1;
+        }
       }
+    } catch (e) {
+      Sheet().alert(
+        `Something went wrong when trying to adjust rows, and section counts per row may not be accurate.
+        Please make sure to double check these counts, according to the guidelines.`
+      );
     }
 
     const reset = () => {
@@ -334,51 +351,60 @@ export function SectionStacks() {
    */
   function applySectionPair(
     sectionPair: IncorrectPair,
-    sectionStacks: number[][],
-    rows: Row[]
+    sectionStacks: number[][]
   ): Function {
     if (sectionPair.forAdding == null || sectionPair.forSubtracting == null) {
       return () => {};
     }
 
     let adjustedRowIndex: number;
-    const sectionForSubtracting = sectionStacks[sectionPair.forSubtracting];
-    const sectionForAdding = sectionStacks[sectionPair.forAdding];
-    for (let k = 0; k < rows.length; k++) {
-      const isTopRow = k === rows.length - 1;
-      const isBottomRow = k === 0;
+    try {
+      const sectionForSubtracting = sectionStacks[sectionPair.forSubtracting];
+      const sectionForAdding = sectionStacks[sectionPair.forAdding];
+      const rowCount = sectionForAdding.length;
+      for (let k = 0; k < rowCount; k++) {
+        const isTopRow = k === rowCount - 1;
+        const isBottomRow = k === 0;
 
-      // row works for subtracting if the remaining number in that row is gte the row below it, (unless it's the bottom row)
-      // and the difference between the remaining number in that row and the row above is less than 2 (unless it's the top row)
-      const isGteRowBelow =
-        isBottomRow ||
-        sectionForSubtracting[k] + 1 >= sectionForSubtracting[k - 1];
-      const isCloseToRowAbove =
-        isTopRow ||
-        sectionForSubtracting[k + 1] - sectionForSubtracting[k] + 1 < 2;
-      const isPossibleRowForSubtracting = isGteRowBelow && isCloseToRowAbove;
+        // row works for subtracting if the remaining number in that row is gte the row below it, (unless it's the bottom row)
+        // and the difference between the remaining number in that row and the row above is less than 2 (unless it's the top row)
+        const isGteRowBelow =
+          isBottomRow ||
+          sectionForSubtracting[k] + 1 >= sectionForSubtracting[k - 1];
+        const isCloseToRowAbove =
+          isTopRow ||
+          sectionForSubtracting[k + 1] - sectionForSubtracting[k] + 1 < 2;
+        const isPossibleRowForSubtracting = isGteRowBelow && isCloseToRowAbove;
 
-      // row works for adding if the remaining number in that row is lte the row above it (unless it's the top row),
-      // and the difference between the remaining number in that row and the row below is lt 2 (unless it's the bottom row)
-      const isLteRowAbove =
-        isTopRow || sectionForAdding[k] + 1 <= sectionForAdding[k + 1];
-      const isCloseToRowBelow =
-        isBottomRow || sectionForAdding[k] + 1 - sectionForAdding[k - 1] < 2;
-      const isPossibleRowForAdding = isLteRowAbove && isCloseToRowBelow;
+        // row works for adding if the remaining number in that row is lte the row above it (unless it's the top row),
+        // and the difference between the remaining number in that row and the row below is lt 2 (unless it's the bottom row)
+        const isLteRowAbove =
+          isTopRow || sectionForAdding[k] + 1 <= sectionForAdding[k + 1];
+        const isCloseToRowBelow =
+          isBottomRow || sectionForAdding[k] + 1 - sectionForAdding[k - 1] < 2;
+        const isPossibleRowForAdding = isLteRowAbove && isCloseToRowBelow;
 
-      if (isPossibleRowForAdding && isPossibleRowForSubtracting) {
-        sectionForAdding[k] += 1;
-        sectionForSubtracting[k] -= 1;
-        adjustedRowIndex = k;
-        break;
+        if (isPossibleRowForAdding && isPossibleRowForSubtracting) {
+          sectionForAdding[k] += 1;
+          sectionForSubtracting[k] -= 1;
+          adjustedRowIndex = k;
+          break;
+        }
       }
+    } catch (e) {
+      Sheet().alert(
+        `Something went wrong when trying to adjust sections, and section counts per row may not be accurate.
+        Please make sure to double check these counts, according to the guidelines.`
+      );
     }
+
     const reset = () => {
       if (adjustedRowIndex != null) {
         sectionStacks[sectionPair.forAdding][adjustedRowIndex] -= 1;
         sectionStacks[sectionPair.forSubtracting][adjustedRowIndex] += 1;
       }
     };
+
     return reset;
   }
 
@@ -390,56 +416,67 @@ export function SectionStacks() {
     rows: Row[],
     sections: Section[]
   ) {
-    const [r, c] = references().cells.sectionStacks;
-    const numRows = 1 + rows.length + 2; // header + rows + total + actual
-    const numColumns = 1 + sections.length + 2; // header + sections + total + actual
+    try {
+      const [r, c] = references().cells.sectionStacks;
+      const numRows = 1 + rows.length + 2; // header + rows + total + actual
+      const numColumns = 1 + sections.length + 2; // header + sections + total + actual
 
-    const values: any[][] = [];
-    values.push(["", ...sections.map(s => s.title), "Total", "Desired Total"]);
-
-    const startingRow = r + 1;
-    const startingColumn = c + 1;
-    const startingColumnChar = Sheet().getCharColumn(startingColumn);
-    const column = Sheet().getCharColumn(
-      startingColumn + sectionStacks.length - 1
-    );
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const stackRow = sectionStacks.map(stack => stack[i]);
-      const row = startingRow + (rows.length - 1 - i);
+      const values: any[][] = [];
       values.push([
-        rows[i].letter,
-        ...stackRow,
-        `=SUM(${startingColumnChar}${row}:${column}${row})`,
-        rows[i].seats
+        "",
+        ...sections.map(s => s.title),
+        "Total",
+        "Desired Total"
       ]);
+
+      const startingRow = r + 1;
+      const startingColumn = c + 1;
+      const startingColumnChar = Sheet().getCharColumn(startingColumn);
+      const column = Sheet().getCharColumn(
+        startingColumn + sectionStacks.length - 1
+      );
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const stackRow = sectionStacks.map(stack => stack[i]);
+        const row = startingRow + (rows.length - 1 - i);
+        values.push([
+          rows[i].letter,
+          ...stackRow,
+          `=SUM(${startingColumnChar}${row}:${column}${row})`,
+          rows[i].seats
+        ]);
+      }
+
+      const totalEquations = sectionStacks.map((_, i) => {
+        const row = startingRow + rows.length - 1;
+        const column = Sheet().getCharColumn(startingColumn + i);
+
+        return `=SUM(${column}${startingRow}:${column}${row})`;
+      });
+
+      values.push(["Total", ...totalEquations, "", ""]);
+      values.push(["Desired Total", ...sections.map(s => s.count), "", ""]);
+
+      const sheet = Sheet().configurationSheet();
+
+      sheet
+        .getRange(r, c, numRows, numColumns)
+        .setValues(values)
+        .setBackground(Config().colors().grey);
+
+      sheet.getRange(r, c, 1, numColumns).setFontWeight("bold");
+      sheet.getRange(r, c, numRows, 1).setFontWeight("bold");
+    } catch (e) {
+      throw new Error(
+        `Something went wrong while displaying seats per row per section: ${e.message}`
+      );
     }
-
-    const totalEquations = sectionStacks.map((_, i) => {
-      const row = startingRow + rows.length - 1;
-      const column = Sheet().getCharColumn(startingColumn + i);
-
-      return `=SUM(${column}${startingRow}:${column}${row})`;
-    });
-
-    values.push(["Total", ...totalEquations, "", ""]);
-    values.push(["Desired Total", ...sections.map(s => s.count), "", ""]);
-
-    const sheet = Sheet().configurationSheet();
-
-    sheet
-      .getRange(r, c, numRows, numColumns)
-      .setValues(values)
-      .setBackground(Config().colors().grey);
-
-    sheet.getRange(r, c, 1, numColumns).setFontWeight("bold");
-    sheet.getRange(r, c, numRows, 1).setFontWeight("bold");
   }
 
-  function getConfirmedSectionStacks(cSections: number, cRows: number) {
+  function getConfirmedSectionStacks(sections: Section[], rows: Row[]) {
     const [r, c] = references().cells.sectionStacks;
     const values: number[][] = Sheet()
       .configurationSheet()
-      .getRange(r + 1, c + 1, cRows, cSections)
+      .getRange(r + 1, c + 1, rows.length, sections.length)
       .getValues();
 
     // values need to be reversed and inverted for storage
@@ -448,9 +485,33 @@ export function SectionStacks() {
 
     // invert rows and columns
     const sectionStacks: number[][] = [];
-    for (let i = 0; i < cSections; i++) {
+    for (let i = 0; i < sections.length; i++) {
       const stack = values.map(row => row[i]);
       sectionStacks.push(stack);
+    }
+
+    // check if every user-provided value is a number
+    if (sectionStacks.some(stack => stack.some(isNaN))) {
+      throw new Error(
+        `Make sure every seat count for sections and rows is a number, and try again.`
+      );
+    }
+
+    // check that counts match for sections and rows
+    for (let i = 0; i < sectionStacks.length; i++) {
+      const stackTotal = sectionStacks[i].reduce((sum, c) => sum + c, 0);
+      if (stackTotal !== sections[i].count) {
+        throw new Error(
+          "Section totals don't match, check totals and try again."
+        );
+      }
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+      const rowTotal = sectionStacks.reduce((sum, stack) => sum + stack[i], 0);
+      if (rowTotal !== rows[i].seats) {
+        throw new Error("Row totals don't match, check totals and try again.");
+      }
     }
 
     return sectionStacks;

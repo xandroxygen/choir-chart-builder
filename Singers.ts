@@ -23,19 +23,25 @@ export function Singers() {
   }
 
   function buildSingers(inputData: string[][]): Singer[] {
-    return inputData.map(
-      ([firstName, lastName, section, height]) =>
-        ({
-          firstName,
-          lastName,
-          section,
-          height: convertHeight(height),
-          seat: {
-            row: "A",
-            num: 1
-          }
-        } as Singer)
-    );
+    try {
+      return inputData.map(
+        ([firstName, lastName, section, height]) =>
+          ({
+            firstName,
+            lastName,
+            section,
+            height: convertHeight(height),
+            seat: {
+              row: "A",
+              num: 1
+            }
+          } as Singer)
+      );
+    } catch (e) {
+      Sheet().alert(
+        `There is corrupt data in the Input sheet, please examine it carefully: ${e.message}`
+      );
+    }
   }
 
   function layoutSingers(
@@ -45,29 +51,35 @@ export function Singers() {
   ): Singer[] {
     const seatedSingers = [];
 
-    sections.forEach((section, i) => {
-      const sectionLayout = sectionLayouts[i];
-      const sectionSingers = singers
-        // only singers in this section
-        .filter(singer => singer.section === section.title)
-        // tallest singers should be sorted first
-        .sort((a, b) =>
-          a.height > b.height ? -1 : a.height < b.height ? 1 : 0
-        );
+    try {
+      sections.forEach((section, i) => {
+        const sectionLayout = sectionLayouts[i];
+        const sectionSingers = singers
+          // only singers in this section
+          .filter(singer => singer.section === section.title)
+          // tallest singers should be sorted first
+          .sort((a, b) =>
+            a.height > b.height ? -1 : a.height < b.height ? 1 : 0
+          );
 
-      // iterate through each row in section layout and assign singers a seat
-      Object.keys(sectionLayout).forEach(letter => {
-        const seats: number[] = sectionLayout[letter];
-        for (let seatNumber of seats) {
-          const singer = sectionSingers.pop();
-          singer.seat = {
-            row: letter,
-            num: seatNumber
-          };
-          seatedSingers.push(singer);
-        }
+        // iterate through each row in section layout and assign singers a seat
+        Object.keys(sectionLayout).forEach(letter => {
+          const seats: number[] = sectionLayout[letter];
+          for (let seatNumber of seats) {
+            const singer = sectionSingers.pop();
+            singer.seat = {
+              row: letter,
+              num: seatNumber
+            };
+            seatedSingers.push(singer);
+          }
+        });
       });
-    });
+    } catch (e) {
+      Sheet().alert(
+        `Something went wrong giving each singer a seat. Check input data and try again, or start over: ${e.message}`
+      );
+    }
 
     return seatedSingers;
   }

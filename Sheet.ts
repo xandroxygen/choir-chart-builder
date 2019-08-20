@@ -33,6 +33,29 @@ export function Sheet() {
     return getSheetByName(references().sheets.Output.Lists);
   }
 
+  function readInputData(): any[][] {
+    try {
+      // read input data from sheet
+      const inputRange = Sheet()
+        .getSheetByName(references().sheets.Input)
+        .getDataRange();
+
+      // set everything to text format
+      inputRange.setNumberFormat("@");
+
+      const inputData = inputRange.getValues();
+
+      // remove header row
+      inputData.shift();
+
+      return inputData;
+    } catch (e) {
+      throw new Error(
+        `Input data is somehow corrupted. Please examine and try again. Original error: ${e.message}`
+      );
+    }
+  }
+
   function getRowsRange(
     r: number,
     c: number,
@@ -100,6 +123,10 @@ export function Sheet() {
     return alphabet[c - 1];
   }
 
+  function alert(message: string) {
+    SpreadsheetApp.getUi().alert(message);
+  }
+
   return {
     getSheetByName,
     configurationSheet,
@@ -107,13 +134,15 @@ export function Sheet() {
     dataSectionStacksSheet,
     dataSectionsSheet,
     dataSingersSheet,
+    readInputData,
     getRowsRange,
     clearDataSheets,
     initializeDataSheets,
     resetConfigurationSheet,
     outputChartSheet,
     outputListsSheet,
-    getCharColumn
+    getCharColumn,
+    alert
   };
 }
 

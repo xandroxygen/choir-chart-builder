@@ -15,7 +15,13 @@ export function Sections() {
       return sections;
     }, {});
 
-    inputSections.forEach(title => (sections[title].count += 1));
+    try {
+      inputSections.forEach(title => (sections[title].count += 1));
+    } catch (e) {
+      Sheet().alert(
+        `Please check for incorrect section titles in Input sheet: ${e.message}`
+      );
+    }
 
     return Object.keys(sections).map(k => sections[k]);
   }
@@ -24,40 +30,41 @@ export function Sections() {
     sectionStacks: number[][],
     rows: Row[]
   ): SectionLayout[] {
-    return Config().configIsCC()
-      ? layoutSectionsInTwoRows(sectionStacks, rows)
-      : layoutSectionsInOneRow(sectionStacks, rows);
+    try {
+      return Config().configIsCC()
+        ? layoutSectionsInTwoRows(sectionStacks, rows)
+        : layoutSectionsInOneRow(sectionStacks, rows);
+    } catch (e) {
+      throw new Error(
+        `Something went wrong laying out seats into sections. Please check input and configuration and start over: ${e.message}`
+      );
+    }
   }
 
+  /**
+   * lay out sections for choirs like CC,
+   * where each section spans one half of the height of the choir,
+   * and half of the section is on each row
+   * the sections are not centered around the midpoint, but are just
+   * filled in from left to right
+   * @param sectionStacks
+   * @param rows
+   */
   function layoutSectionsInTwoRows(
     sectionStacks: number[][],
     rows: Row[]
   ): SectionLayout[] {
-    // midpoint of each row is after this seat number
-    const madsenMidpoint = {
-      J: 18,
-      H: 18,
-      G: 18,
-      F: 17,
-      E: 17,
-      D: 17,
-      C: 16,
-      B: 16
-    };
-
     // an array of sections, each containing rows,
     // indexed by letter, each containing the seat numbers for that row
-    const sectionLayouts: SectionLayout[] = sectionStacks.map(_ =>
-      rows.reduce((ret, row) => {
-        ret[row.letter] = [];
-        return ret;
-      }, {})
-    );
+    const sectionLayouts = initializeSectionLayouts(sectionStacks, rows);
 
+    // start at the beginning of each row
+    // where the row is centered around the midpoint
+    const midpoints = madsenMidpoints();
     let startPoints = {};
     for (let row of rows) {
       startPoints[row.letter] =
-        madsenMidpoint[row.letter] - Math.ceil(row.seats / 2);
+        midpoints[row.letter] - Math.ceil(row.seats / 2);
     }
 
     for (let i = 0; i < sectionStacks.length; i++) {
@@ -79,39 +86,28 @@ export function Sections() {
     return sectionLayouts;
   }
 
+  /**
+   * lay out sections for choirs like MC and WC,
+   * where each section spans from top to bottom of the choir
+   * and the sections are centered around the midpoint
+   * @param sectionStacks
+   * @param rows
+   */
   function layoutSectionsInOneRow(
     sectionStacks: number[][],
     rows: Row[]
   ): SectionLayout[] {
-    // midpoint of each row is after this seat number
-    const madsenMidpoint = {
-      J: 18,
-      H: 18,
-      G: 18,
-      F: 17,
-      E: 17,
-      D: 17,
-      C: 16,
-      B: 16
-    };
-
     // an array of sections, each containing rows,
     // indexed by letter, each containing the seat numbers for that row
-    Logger.log("creating section layouts");
-    const sectionLayouts: SectionLayout[] = sectionStacks.map(_ =>
-      rows.reduce((ret, row) => {
-        ret[row.letter] = [];
-        return ret;
-      }, {})
-    );
+    const sectionLayouts = initializeSectionLayouts(sectionStacks, rows);
 
     // start at the midpoint for every row
+    const midpoints = madsenMidpoints();
     let startPoints = {};
     for (let { letter } of rows) {
-      startPoints[letter] = madsenMidpoint[letter];
+      startPoints[letter] = midpoints[letter];
     }
 
-    Logger.log("counting seats left");
     // for each section left of the midpoint and row in the section,
     // count out the seat numbers from the start point on the right
     // to the end point on the left
@@ -132,10 +128,9 @@ export function Sections() {
 
     // reset start points to midpoint
     for (let { letter } of rows) {
-      startPoints[letter] = madsenMidpoint[letter];
+      startPoints[letter] = midpoints[letter];
     }
 
-    Logger.log("counting seats right");
     // for each section right of the midpoint and row in the section,
     // count out the seat numbers from the start point on the left
     // to the end point on the right
@@ -160,7 +155,6 @@ export function Sections() {
       // row is overflowing left, move right
       const leftOverflow = 1 - sectionLayouts[0][letter][0];
       if (leftOverflow > 0) {
-        Logger.log("overflowing left");
         for (let layout of sectionLayouts) {
           const row = layout[letter] as number[];
 
@@ -180,7 +174,6 @@ export function Sections() {
       const lastSection = peek(sectionLayouts)[letter] as number[];
       const rightOverflow = peek(lastSection) - maxRowSize;
       if (rightOverflow > 0) {
-        Logger.log("overflowing right");
         for (let layout of sectionLayouts) {
           const row = layout[letter] as number[];
 
@@ -198,6 +191,32 @@ export function Sections() {
     }
 
     return sectionLayouts;
+  }
+
+  function madsenMidpoints() {
+    // midpoint of each row is after this seat number
+    return {
+      J: 18,
+      H: 18,
+      G: 18,
+      F: 17,
+      E: 17,
+      D: 17,
+      C: 16,
+      B: 16
+    };
+  }
+
+  function initializeSectionLayouts(
+    sectionStacks: number[][],
+    rows: Row[]
+  ): SectionLayout[] {
+    return sectionStacks.map(_ =>
+      rows.reduce((ret, row) => {
+        ret[row.letter] = [];
+        return ret;
+      }, {})
+    );
   }
 
   function peek(arr: any[]) {

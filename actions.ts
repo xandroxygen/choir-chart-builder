@@ -12,17 +12,7 @@ function parseInput() {
   const SingersFactory = Singers();
   const ConfigFactory = Config();
 
-  const inputRange = Sheet()
-    .getSheetByName(references().sheets.Input)
-    .getDataRange();
-
-  // set everything to text format
-  inputRange.setNumberFormat("@");
-
-  const inputData = inputRange.getValues();
-
-  // remove header row
-  inputData.shift();
+  const inputData = Sheet().readInputData();
 
   // handle rows
   const total = inputData.length;
@@ -34,7 +24,8 @@ function parseInput() {
   RowsFactory.saveRows(rows);
 
   // handle sections
-  const sectionConfig = Config().getFlatSections();
+  const sectionConfig = ConfigFactory.getFlatSections();
+  // get 3rd column from input data
   const inputSections = inputData.map(inputRow => inputRow[2]);
   const sections = SectionsFactory.buildSections(inputSections, sectionConfig);
   SectionsFactory.saveSections(sections);
@@ -70,8 +61,8 @@ function confirmSectionStacks() {
   const rows = Rows().readRows();
   const sections = Sections().readSections();
   const sectionStacks = SectionStacksFactory.getConfirmedSectionStacks(
-    sections.length,
-    rows.length
+    sections,
+    rows
   );
 
   SectionStacksFactory.saveSectionStacks(sectionStacks);
