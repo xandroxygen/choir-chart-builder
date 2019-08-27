@@ -19,7 +19,9 @@ export function Sections() {
       inputSections.forEach(title => (sections[title].count += 1));
     } catch (e) {
       Sheet().alert(
-        `Please check for incorrect section titles in Input sheet: ${e.message}`
+        `Please check for incorrect section titles in Input sheet!
+        
+        Technical error: ${e.message}`
       );
     }
 
@@ -193,6 +195,76 @@ export function Sections() {
     return sectionLayouts;
   }
 
+  function layoutSectionsAlternate(
+    rows: Row[],
+    sections: Section[]
+  ): SectionLayout[] {
+    try {
+      return Config().configIsCC()
+        ? layoutSectionPerRow(rows, sections)
+        : layoutSectionsInOctets(rows);
+    } catch (e) {
+      throw new Error(
+        `Something went wrong laying out seats into sections. Please check input and configuration and start over: ${e.message}`
+      );
+    }
+  }
+
+  function layoutSectionPerRow(
+    rows: Row[],
+    sections: Section[]
+  ): SectionLayout[] {
+    // this is a pretty CC-specific hack, as far as hard-coding section order
+    // I don't like it, I don't agree with it. But I accept it.
+    const sectionOrder = ["S1", "S2", "A1", "A2", "T1", "T2", "B1", "B2"];
+    // store layouts keyed by section title
+    const sectionLayouts = {};
+    const midpoints = madsenMidpoints();
+
+    // sort sections by the order above
+    const sectionsByTitle = sections.reduce((ret, section) => {
+      ret[section.title] = section;
+      return ret;
+    }, {});
+    const sortedSections: Section[] = sectionOrder.map(
+      title => sectionsByTitle[title]
+    );
+
+    // from bottom row to top row
+    for (let row of rows) {
+      const midpoint = midpoints[row.letter];
+
+      // lay the first section out to the left of the midpoint
+      const leftSection = sortedSections.shift();
+      const leftEndpoint = midpoint - leftSection.count;
+      const leftSectionLayout = rowsByTitle(rows);
+      for (let i = leftEndpoint; i < midpoint; i++) {
+        // add 1 because seat numbers are 1-based
+        leftSectionLayout[row.letter].push(i + 1);
+      }
+      sectionLayouts[leftSection.title] = leftSectionLayout;
+
+      // lay the second section out to the right of the midpoint
+      const rightSection = sortedSections.shift();
+      const rightEndpoint = midpoint + rightSection.count;
+      const rightSectionLayout = rowsByTitle(rows);
+      for (let i = midpoint; i < rightEndpoint; i++) {
+        // add 1 because seat numbers are 1-based
+        rightSectionLayout[row.letter].push(i + 1);
+      }
+      sectionLayouts[rightSection.title] = rightSectionLayout;
+    }
+    // assumptions at this point
+    // - no row is overflowing, either right or left, because CC never has sections that big
+
+    // keep layouts in original section order
+    return sections.map(({ title }) => sectionLayouts[title]);
+  }
+
+  function layoutSectionsInOctets(rows: Row[]): SectionLayout[] {
+    return [];
+  }
+
   function madsenMidpoints() {
     // midpoint of each row is after this seat number
     return {
@@ -208,15 +280,17 @@ export function Sections() {
   }
 
   function initializeSectionLayouts(
-    sectionStacks: number[][],
+    sections: any[],
     rows: Row[]
   ): SectionLayout[] {
-    return sectionStacks.map(_ =>
-      rows.reduce((ret, row) => {
-        ret[row.letter] = [];
-        return ret;
-      }, {})
-    );
+    return sections.map(_ => rowsByTitle(rows));
+  }
+
+  function rowsByTitle(rows: Row[]) {
+    return rows.reduce((ret, row) => {
+      ret[row.letter] = [];
+      return ret;
+    }, {});
   }
 
   function peek(arr: any[]) {
@@ -248,6 +322,7 @@ export function Sections() {
   return {
     buildSections,
     layoutSections,
+    layoutSectionsAlternate,
     saveSections,
     readSections
   };

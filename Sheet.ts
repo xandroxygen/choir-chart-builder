@@ -21,6 +21,10 @@ export function Sheet() {
     return getSheetByName(references().sheets.Data.Singers);
   }
 
+  function dataAlternateSingersSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Data.AlternateSingers);
+  }
+
   function dataSectionStacksSheet(): GoogleAppsScript.Spreadsheet.Sheet {
     return getSheetByName(references().sheets.Data.SectionStacks);
   }
@@ -29,8 +33,16 @@ export function Sheet() {
     return getSheetByName(references().sheets.Output.Chart);
   }
 
+  function outputAlternateChartSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Output.AlternateChart);
+  }
+
   function outputListsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
     return getSheetByName(references().sheets.Output.Lists);
+  }
+
+  function outputAlternateListsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Output.AlternateLists);
   }
 
   function readInputData(): any[][] {
@@ -134,6 +146,7 @@ export function Sheet() {
     dataSectionStacksSheet,
     dataSectionsSheet,
     dataSingersSheet,
+    dataAlternateSingersSheet,
     readInputData,
     getRowsRange,
     clearDataSheets,
@@ -141,6 +154,8 @@ export function Sheet() {
     resetConfigurationSheet,
     outputChartSheet,
     outputListsSheet,
+    outputAlternateChartSheet,
+    outputAlternateListsSheet,
     getCharColumn,
     alert
   };
@@ -174,13 +189,16 @@ export function references() {
     Input: "Input",
     Output: {
       Chart: `${outputPrefix} Seating Chart`,
-      Lists: `${outputPrefix} Lists`
+      Lists: `${outputPrefix} Lists`,
+      AlternateChart: `${outputPrefix} Alternate Seating Chart`,
+      AlternateLists: `${outputPrefix} Alternate Lists`
     },
     Data: {
       Rows: `${dataPrefix} Rows`,
       Sections: `${dataPrefix} Sections`,
       Singers: `${dataPrefix} Singers`,
-      SectionStacks: `${dataPrefix} Section Stacks`
+      SectionStacks: `${dataPrefix} Section Stacks`,
+      AlternateSingers: `${dataPrefix} Alternate Singers`
     }
   };
 

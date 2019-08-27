@@ -3,7 +3,18 @@ import { Sheet, references } from "./Sheet";
 import { Config } from "./Config";
 
 export function SeatingChart() {
-  function displayChart(singers: Singer[], sectionConfig: SectionConfig[]) {
+  function displayChartAlternate(
+    singers: Singer[],
+    sectionConfig: SectionConfig[]
+  ) {
+    return displayChart(singers, sectionConfig, true);
+  }
+
+  function displayChart(
+    singers: Singer[],
+    sectionConfig: SectionConfig[],
+    isAlternate: boolean = false
+  ) {
     try {
       // sort singers into rows, indexed by letter
       const singersByRow = singers.reduce((rows, singer) => {
@@ -85,7 +96,7 @@ export function SeatingChart() {
       const numRows = 1 + sortedRows.length;
       const numColumns = 2 + maxRowSize;
 
-      const sheet = Sheet().outputChartSheet();
+      const sheet = getChartSheet(isAlternate);
 
       sheet
         .getRange(r, c, numRows, numColumns)
@@ -103,9 +114,13 @@ export function SeatingChart() {
     }
   }
 
-  function displayFullList(singers: Singer[]) {
+  function displayFullListAlternate(singers: Singer[]) {
+    return displayFullList(singers, true);
+  }
+
+  function displayFullList(singers: Singer[], isAlternate: boolean = false) {
     try {
-      const sheet = Sheet().outputListsSheet();
+      const sheet = getListsSheet(isAlternate);
       const [r, c] = references().cells.output.fullList;
 
       const values = [
@@ -126,9 +141,16 @@ export function SeatingChart() {
     }
   }
 
-  function displayListBySection(singers: Singer[]) {
+  function displayListBySectionAlternate(singers: Singer[]) {
+    return displayListBySection(singers, true);
+  }
+
+  function displayListBySection(
+    singers: Singer[],
+    isAlternate: boolean = false
+  ) {
     try {
-      const sheet = Sheet().outputListsSheet();
+      const sheet = getListsSheet(isAlternate);
       const [r, c] = references().cells.output.sectionList;
 
       const singersBySection = singers.reduce((sections, singer) => {
@@ -197,8 +219,15 @@ export function SeatingChart() {
     }
   }
 
-  function readChart(singers: Singer[]): [Singer[], FailedUpdate[]] {
-    const sheet = Sheet().outputChartSheet();
+  function readChartAlternate(singers: Singer[]) {
+    return readChart(singers, true);
+  }
+
+  function readChart(
+    singers: Singer[],
+    isAlternate: boolean = false
+  ): [Singer[], FailedUpdate[]] {
+    const sheet = getChartSheet(isAlternate);
     const values = sheet.getDataRange().getValues();
 
     const seatsFromChart = [];
@@ -237,12 +266,18 @@ export function SeatingChart() {
     ];
   }
 
-  function displayFailedUpdates(failedUpdates: FailedUpdate[]) {
+  function displayFailedUpdatesAlternate(failedUpdates: FailedUpdate[]) {
+    return displayFailedUpdates(failedUpdates, true);
+  }
+
+  function displayFailedUpdates(
+    failedUpdates: FailedUpdate[],
+    isAlternate: boolean = false
+  ) {
     const failedUpdateValues = [];
     failedUpdates.forEach(({ name, cell }) => {
-      const range = Sheet()
-        .outputChartSheet()
-        .getRange(cell.r, cell.c);
+      const range = getChartSheet(isAlternate).getRange(cell.r, cell.c);
+
       range
         .setBackground("red")
         .setFontWeight("bold")
@@ -261,11 +296,28 @@ export function SeatingChart() {
       );
   }
 
+  function getChartSheet(isAlternate: boolean = false) {
+    return isAlternate
+      ? Sheet().outputAlternateChartSheet()
+      : Sheet().outputChartSheet();
+  }
+
+  function getListsSheet(isAlternate: boolean = false) {
+    return isAlternate
+      ? Sheet().outputAlternateListsSheet()
+      : Sheet().outputListsSheet();
+  }
+
   return {
     displayChart,
+    displayChartAlternate,
     displayFullList,
+    displayFullListAlternate,
     displayListBySection,
+    displayListBySectionAlternate,
     readChart,
-    displayFailedUpdates
+    readChartAlternate,
+    displayFailedUpdates,
+    displayFailedUpdatesAlternate
   };
 }

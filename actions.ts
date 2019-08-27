@@ -33,6 +33,7 @@ function parseInput() {
   // handle singers
   const singers = SingersFactory.buildSingers(inputData);
   SingersFactory.saveSingers(singers);
+  SingersFactory.saveSingersAlternate(singers);
 }
 
 function confirmRowCounts() {
@@ -68,6 +69,7 @@ function confirmSectionStacks() {
   SectionStacksFactory.saveSectionStacks(sectionStacks);
 
   buildChart();
+  buildAlternateChart();
 }
 
 function buildChart() {
@@ -92,6 +94,30 @@ function buildChart() {
   showChart();
 }
 
+function buildAlternateChart() {
+  const SectionsFactory = Sections();
+  const SingersFactory = Singers();
+
+  const rows = Rows().readRows();
+  const sections = SectionsFactory.readSections();
+  const singers = SingersFactory.readSingers();
+
+  // layout section stacks in seats
+  const sectionLayouts = SectionsFactory.layoutSectionsAlternate(
+    rows,
+    sections
+  );
+
+  const seatedSingers = SingersFactory.layoutSingers(
+    singers,
+    sectionLayouts,
+    sections
+  );
+
+  SingersFactory.saveSingersAlternate(seatedSingers);
+  showAlternateChart();
+}
+
 function showChart() {
   const seatingChart = SeatingChart();
   const singers = Singers().readSingers();
@@ -100,6 +126,16 @@ function showChart() {
   seatingChart.displayChart(singers, sectionConfig);
   seatingChart.displayFullList(singers);
   seatingChart.displayListBySection(singers);
+}
+
+function showAlternateChart() {
+  const seatingChart = SeatingChart();
+  const singers = Singers().readSingersAlternate();
+  const sectionConfig = Config().getFlatSections();
+
+  seatingChart.displayChartAlternate(singers, sectionConfig);
+  seatingChart.displayFullListAlternate(singers);
+  seatingChart.displayListBySectionAlternate(singers);
 }
 
 function saveChart() {
@@ -114,6 +150,22 @@ function saveChart() {
   seatingChart.displayFullList(updatedSingers);
   seatingChart.displayListBySection(updatedSingers);
   seatingChart.displayFailedUpdates(failedUpdates);
+}
+
+function saveAlternateChart() {
+  const seatingChart = SeatingChart();
+  const singers = Singers().readSingersAlternate();
+  const sectionConfig = Config().getFlatSections();
+  const [updatedSingers, failedUpdates] = seatingChart.readChartAlternate(
+    singers
+  );
+
+  Singers().saveSingersAlternate(updatedSingers);
+
+  seatingChart.displayChartAlternate(updatedSingers, sectionConfig);
+  seatingChart.displayFullListAlternate(updatedSingers);
+  seatingChart.displayListBySectionAlternate(updatedSingers);
+  seatingChart.displayFailedUpdatesAlternate(failedUpdates);
 }
 
 function reset() {
@@ -154,6 +206,10 @@ function onOpenTrigger() {
     {
       name: "Save seating chart changes",
       functionName: "saveChart"
+    },
+    {
+      name: "Save alternate seating chart changes",
+      functionName: "saveAlternateChart"
     },
     {
       name: "Start over",

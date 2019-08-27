@@ -8,39 +8,52 @@ export function Singers() {
    * @returns {number} The height in inches
    */
   function convertHeight(height: string): number {
-    let feet: number;
-    let inches: number = 0;
-
-    // if height is provided as "ft", convert without inches
-    // +height provides number if valid, otherwise NaN
-    if (!isNaN(+height)) {
-      feet = +height;
-    } else {
-      [feet, inches] = height.split("-").map(s => parseFloat(s));
+    // make sure height is provided as either
+    // "ft", or "ft-in"
+    if (!/\d($|-\d+)/.test(height)) {
+      throw new Error(`Incorrect height provided: ${height}`);
     }
 
-    return feet * 12 + inches;
+    const [feet, inches] = height.split("-").map(s => parseFloat(s));
+
+    // if height is a single number, inches will be undefined
+    return feet * 12 + (inches || 0);
   }
 
   function buildSingers(inputData: string[][]): Singer[] {
     try {
-      return inputData.map(
-        ([firstName, lastName, section, height]) =>
-          ({
-            firstName,
-            lastName,
-            section,
-            height: convertHeight(height),
-            seat: {
-              row: "A",
-              num: 1
-            }
-          } as Singer)
-      );
+      return inputData.map(inputRow => {
+        inputRow = inputRow.filter(col => col !== "");
+
+        if (inputRow.length < 4) {
+          throw new Error(`Not enough columns in row: ${inputRow}`);
+        }
+
+        if (inputRow.length > 4) {
+          throw new Error(`Too many columns in row: ${inputRow}`);
+        }
+
+        const [firstName, lastName, section, height] = inputRow;
+        return {
+          firstName,
+          lastName,
+          section,
+          height: convertHeight(height),
+          seat: {
+            row: "A",
+            num: 1
+          }
+        } as Singer;
+      });
     } catch (e) {
       Sheet().alert(
-        `There is corrupt data in the Input sheet, please examine it carefully: ${e.message}`
+        `There is corrupt data in the Input sheet, please fix it and try again:
+        
+        Error: ${e.message}`
       );
+
+      // severe error, stop execution
+      throw e;
     }
   }
 
@@ -79,12 +92,13 @@ export function Singers() {
       Sheet().alert(
         `Something went wrong giving each singer a seat. Check input data and try again, or start over: ${e.message}`
       );
+      throw e;
     }
 
     return seatedSingers;
   }
 
-  function saveSingers(singers: Singer[]) {
+  function saveSingers(singers: Singer[], isAlternate: boolean = false) {
     const [r, c] = references().cells.data.singers;
     const values = singers.map(singer => [
       singer.firstName,
@@ -94,17 +108,23 @@ export function Singers() {
       `${singer.seat.row}${singer.seat.num}`
     ]);
 
-    Sheet()
-      .dataSingersSheet()
-      .getRange(r, c, singers.length, 5)
-      .setValues(values);
+    const sheet = isAlternate
+      ? Sheet().dataSingersSheet()
+      : Sheet().dataAlternateSingersSheet();
+
+    sheet.getRange(r, c, singers.length, 5).setValues(values);
   }
 
-  function readSingers(): Singer[] {
-    const values = Sheet()
-      .dataSingersSheet()
-      .getDataRange()
-      .getValues();
+  function saveSingersAlternate(singers: Singer[]) {
+    return saveSingers(singers, true);
+  }
+
+  function readSingers(isAlternate: boolean = false): Singer[] {
+    const sheet = isAlternate
+      ? Sheet().dataSingersSheet()
+      : Sheet().dataAlternateSingersSheet();
+
+    const values = sheet.getDataRange().getValues();
 
     // remove header row
     values.shift();
@@ -124,10 +144,16 @@ export function Singers() {
     );
   }
 
+  function readSingersAlternate(): Singer[] {
+    return readSingers(true);
+  }
+
   return {
     buildSingers,
     layoutSingers,
     saveSingers,
-    readSingers
+    readSingers,
+    saveSingersAlternate,
+    readSingersAlternate
   };
 }
