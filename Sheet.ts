@@ -17,6 +17,10 @@ export function Sheet() {
     return getSheetByName(references().sheets.Data.Sections);
   }
 
+  function dataAlternateSectionsSheet(): GoogleAppsScript.Spreadsheet.Sheet {
+    return getSheetByName(references().sheets.Data.AlternateSections);
+  }
+
   function dataSingersSheet(): GoogleAppsScript.Spreadsheet.Sheet {
     return getSheetByName(references().sheets.Data.Singers);
   }
@@ -81,6 +85,15 @@ export function Sheet() {
     dataSectionStacksSheet().clear();
     dataSectionsSheet().clear();
     dataSingersSheet().clear();
+    dataAlternateSectionsSheet().clear();
+    dataAlternateSingersSheet().clear();
+  }
+
+  function clearOutputSheets() {
+    outputChartSheet().clear();
+    outputListsSheet().clear();
+    outputAlternateChartSheet().clear();
+    outputAlternateListsSheet().clear();
   }
 
   function initializeDataSheets() {
@@ -99,7 +112,17 @@ export function Sheet() {
       .setValues([["First Name", "Last Name", "Section", "Height", "Seat"]])
       .setFontWeight("bold");
 
+    dataAlternateSingersSheet()
+      .getRange("A1:E1")
+      .setValues([["First Name", "Last Name", "Section", "Height", "Seat"]])
+      .setFontWeight("bold");
+
     dataSectionsSheet()
+      .getRange("A1:B1")
+      .setValues([["Section Title", "Count"]])
+      .setFontWeight("bold");
+
+    dataAlternateSectionsSheet()
       .getRange("A1:B1")
       .setValues([["Section Title", "Count"]])
       .setFontWeight("bold");
@@ -145,11 +168,13 @@ export function Sheet() {
     dataRowsSheet,
     dataSectionStacksSheet,
     dataSectionsSheet,
+    dataAlternateSectionsSheet,
     dataSingersSheet,
     dataAlternateSingersSheet,
     readInputData,
     getRowsRange,
     clearDataSheets,
+    clearOutputSheets,
     initializeDataSheets,
     resetConfigurationSheet,
     outputChartSheet,
@@ -198,7 +223,8 @@ export function references() {
       Sections: `${dataPrefix} Sections`,
       Singers: `${dataPrefix} Singers`,
       SectionStacks: `${dataPrefix} Section Stacks`,
-      AlternateSingers: `${dataPrefix} Alternate Singers`
+      AlternateSingers: `${dataPrefix} Alternate Singers`,
+      AlternateSections: `${dataPrefix} Alternate Sections`
     }
   };
 

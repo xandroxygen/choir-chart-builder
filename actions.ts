@@ -30,6 +30,14 @@ function parseInput() {
   const sections = SectionsFactory.buildSections(inputSections, sectionConfig);
   SectionsFactory.saveSections(sections);
 
+  // handle alternate sections
+  // either octets or one section per row
+  const alternateSections = SectionsFactory.buildSectionsAlternate(
+    inputSections,
+    sectionConfig
+  );
+  SectionsFactory.saveSectionsAlternate(alternateSections);
+
   // handle singers
   const singers = SingersFactory.buildSingers(inputData);
   SingersFactory.saveSingers(singers);
@@ -99,7 +107,7 @@ function buildAlternateChart() {
   const SingersFactory = Singers();
 
   const rows = Rows().readRows();
-  const sections = SectionsFactory.readSections();
+  const sections = SectionsFactory.readSectionsAlternate();
   const singers = SingersFactory.readSingers();
 
   // layout section stacks in seats
@@ -108,7 +116,7 @@ function buildAlternateChart() {
     sections
   );
 
-  const seatedSingers = SingersFactory.layoutSingers(
+  const seatedSingers = SingersFactory.layoutSingersAlternate(
     singers,
     sectionLayouts,
     sections
@@ -173,8 +181,7 @@ function reset() {
   Config().clearConfig();
   SheetFactory.clearDataSheets();
   SheetFactory.initializeDataSheets();
-  SheetFactory.outputChartSheet().clear();
-  SheetFactory.outputListsSheet().clear();
+  SheetFactory.clearOutputSheets();
 }
 
 function onEditTrigger(e: GoogleAppsScript.Events.SheetsOnEdit) {

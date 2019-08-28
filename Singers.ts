@@ -1,5 +1,13 @@
-import { Singer, SectionLayout, Section } from "./definitions";
+import {
+  Singer,
+  SectionLayout,
+  Section,
+  SectionTitle,
+  SingerObj,
+  NumberObj
+} from "./definitions";
 import { references, Sheet } from "./Sheet";
+import { Config } from "./Config";
 
 export function Singers() {
   /**
@@ -98,6 +106,116 @@ export function Singers() {
     return seatedSingers;
   }
 
+  function layoutSingersAlternate(
+    singers: Singer[],
+    sectionLayouts: SectionLayout[],
+    sections: Section[]
+  ): Singer[] {
+    // CC doesn't need to do anything special before singer layout
+    if (Config().configIsCC()) {
+      return layoutSingers(singers, sectionLayouts, sections);
+    }
+
+    // keep track of the order that sections come in
+    // sort by section title for later use
+    const sectionTitles: SectionTitle[] = [];
+    const singersBySection: SingerObj = singers.reduce((sections, singer) => {
+      if (!sections[singer.section]) {
+        sections[singer.section] = [];
+        sectionTitles.push(singer.section);
+      }
+      sections[singer.section].push(singer);
+      return sections;
+    }, {});
+
+    // the base number of singers from each section that belong in an octet
+    // hopefully this should be 2, but may not be
+    const sectionCountsPerOctet: NumberObj = {};
+    // the leftover singers that need to be grouped into octets
+    const remaindersPerSection: NumberObj = {};
+    for (let title of sectionTitles) {
+      const count = singersBySection[title].length;
+      sectionCountsPerOctet[title] = Math.floor(count / sections.length);
+      remaindersPerSection[title] = count % sections.length;
+    }
+
+    // all the remainders from all the sections, formatted as a
+    // list of section titles
+    // round robin through each of the section titles so that
+    // octets are filled with a variety of sections, and not
+    // with the same section
+    // ex: ["T2", "T1, "B2", "B1", "T2", ...]
+    const remainderAssignments: SectionTitle[] = [];
+    const maxAssignments = Math.max(
+      ...sectionTitles.map(key => remaindersPerSection[key])
+    );
+    for (let i = 0; i < maxAssignments; i++) {
+      for (let title of sectionTitles) {
+        if (i < remaindersPerSection[title]) {
+          remainderAssignments.push(title as SectionTitle);
+        }
+      }
+    }
+
+    // assign singers to each octet
+    const seatedSingers: Singer[] = [];
+    for (let i = 0; i < sections.length; i++) {
+      const octet = sections[i];
+      const octetCounts: NumberObj = {};
+      let octetTotal = 0;
+
+      // try to fill the octet with the base number from each section
+      for (let title of sectionTitles) {
+        const sectionCounts = sectionCountsPerOctet[title];
+        octetCounts[title] = (octetCounts[title] || 0) + sectionCounts;
+        octetTotal += sectionCounts;
+      }
+
+      // fill the difference with remainders
+      const difference = octet.count - octetTotal;
+      if (difference > 0) {
+        for (let j = 0; j < difference; j++) {
+          const remainderAssignment = remainderAssignments.shift();
+          octetCounts[remainderAssignment] += 1;
+        }
+      }
+
+      // now that we have an accurate count for each section
+      // for this octet, reassign that many singers from
+      // each section to this octet
+      const octetSingers = [];
+      for (let title of sectionTitles) {
+        octetSingers.push(
+          ...singersBySection[title]
+            .splice(0, octetCounts[title])
+            .map(singer => {
+              singer.section = octet.title;
+              return singer;
+            })
+        );
+      }
+
+      // give each singer in the octet a seat from the
+      // octet's layout
+      const sectionLayout = sectionLayouts[i];
+      for (let letter of Object.keys(sectionLayout)) {
+        const seats: number[] = sectionLayout[letter];
+        for (let seatNumber of seats) {
+          const singer = octetSingers.shift();
+          singer.seat = {
+            row: letter,
+            num: seatNumber
+          };
+          seatedSingers.push(singer);
+        }
+      }
+
+      seatedSingers.push(...octetSingers);
+    }
+
+    return seatedSingers;
+  }
+
   function saveSingers(singers: Singer[], isAlternate: boolean = false) {
     const [r, c] = references().cells.data.singers;
     const values = singers.map(singer => [
@@ -151,6 +269,7 @@ export function Singers() {
   return {
     buildSingers,
     layoutSingers,
+    layoutSingersAlternate,
     saveSingers,
     readSingers,
     saveSingersAlternate,

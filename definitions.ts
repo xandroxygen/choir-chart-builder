@@ -64,3 +64,11 @@ export interface FailedUpdate {
     c: number;
   };
 }
+
+export interface SingerObj {
+  [key: string]: Singer[];
+}
+
+export interface NumberObj {
+  [key: string]: number;
+}
