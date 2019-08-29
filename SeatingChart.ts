@@ -60,6 +60,12 @@ export function SeatingChart() {
         colors[config.title] = config.color;
         return colors;
       }, {});
+      const getSectionColor = getSectionColorBuilder(
+        sectionColors,
+        Config().colors(),
+        isAlternate,
+        Config().configIsCC()
+      );
 
       const headerRow: any[] = ["", ""];
       const headerColorRow = [blankColor, blankColor];
@@ -82,7 +88,7 @@ export function SeatingChart() {
           rowColorValues.push(blankColor);
         }
         rowValues.push(...row.singers.map(s => `${s.firstName} ${s.lastName}`));
-        rowColorValues.push(...row.singers.map(s => sectionColors[s.section]));
+        rowColorValues.push(...row.singers.map(s => getSectionColor(s)));
         for (let i = 0; i < rightPadding; i++) {
           rowValues.push("");
           rowColorValues.push(blankColor);
@@ -111,6 +117,35 @@ export function SeatingChart() {
       throw new Error(
         `Something went wrong displaying the seating chart. Input data may be incorrect, try again or start over: ${e.message}`
       );
+    }
+  }
+
+  function getSectionColorBuilder(
+    sectionColors,
+    allColors,
+    isAlternate: boolean,
+    isConfigCC: boolean
+  ): Function {
+    // cache values once and return a function that only
+    // takes the singer for faster iteration
+
+    if (isAlternate && !isConfigCC) {
+      // for octet layout specifically
+      // rotate through almost all available colors
+      // use an odd number so that it fits better
+      const colorKeys = Object.keys(allColors).splice(2, 5);
+      const colorCount = colorKeys.length;
+
+      return (singer: Singer): string => {
+        // pull number out of section, eg "O12" -> 12
+        const sectionNumber = parseInt(singer.section.slice(1));
+        // rotate through all available colors
+        const colorKey = colorKeys[sectionNumber % colorCount];
+        return allColors[colorKey];
+      };
+    } else {
+      // otherwise look up color normally
+      return (singer: Singer): string => sectionColors[singer.section];
     }
   }
 

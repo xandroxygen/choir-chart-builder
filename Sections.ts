@@ -375,7 +375,7 @@ export function Sections() {
       // if the octet can fit in both rows without overflowing,
       // then give it those seats
       if (
-        firstHalfEndpoint <= rowPoints[firstRowIterator.letter].endPoint ||
+        firstHalfEndpoint <= rowPoints[firstRowIterator.letter].endPoint &&
         secondHalfEndpoint <= rowPoints[secondRowIterator.letter].endPoint
       ) {
         // add seats from both rows to the octet
