@@ -126,15 +126,38 @@ export function SectionStacks() {
       // split the rows in half, and create section stacks for each half in the same way
       const topHalfSections = sectionConfig[0].map(config => config.title);
 
+      // to deal with sections with odd counts, put the larger half
+      // of the section on alternating rows
+      let isLargerProportionFirst = true;
       return sections.map(section => {
         const isTopHalfSection = topHalfSections.indexOf(section.title) > -1;
         const proportion = (section.count / total) * 2;
+        const isOddCountSection = section.count % 2 === 1;
+
+        // alternate for each section between starting with
+        // larger half or smaller half
+        let isLargerProportion = isLargerProportionFirst;
+        isLargerProportionFirst = !isLargerProportionFirst;
         return rows.map((row, index) => {
           const isTopHalfRow = index >= rowMidpoint;
-          return (isTopHalfRow && isTopHalfSection) ||
+          if (
+            (isTopHalfRow && isTopHalfSection) ||
             (!isTopHalfRow && !isTopHalfSection)
-            ? Math.round(proportion * row.seats)
-            : 0;
+          ) {
+            // choose a half of the section to return
+            // if the section is even, just round
+            // if it's odd, either smaller or larger half
+            const seatsInRow = isOddCountSection
+              ? isLargerProportion
+                ? Math.ceil(proportion * row.seats)
+                : Math.floor(proportion * row.seats)
+              : Math.round(proportion * row.seats);
+            isLargerProportion = !isLargerProportion;
+            return seatsInRow;
+          } else {
+            // no seats in this row
+            return 0;
+          }
         });
       });
     } else {
