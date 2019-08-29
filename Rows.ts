@@ -84,13 +84,26 @@ export function Rows() {
   function setGeneratedRows(rows: Row[]) {
     const SheetFactory = Sheet();
     const [r, c] = references().cells.cGeneratedRows;
+    const numRows = rows.length + 2;
+    const numColumns = 2;
     // copy rows here bc reverse is in-place
     const output = [...rows].reverse().map(row => [row.letter, row.seats]);
-    SheetFactory.getRowsRange(
-      r,
-      c,
-      SheetFactory.configurationSheet()
-    ).setValues(output);
+
+    const endRow = r + rows.length - 1;
+    const column = SheetFactory.getCharColumn(c + 1);
+    output.push(["Total", `=SUM(${column}${r}:${column}${endRow})`]);
+    output.push([
+      "Desired Total",
+      rows.reduce((sum, row) => sum + row.seats, 0)
+    ]);
+
+    SheetFactory.configurationSheet()
+      .getRange(r, c, numRows, numColumns)
+      .setValues(output);
+
+    SheetFactory.configurationSheet()
+      .getRange(r, c, numRows, 1)
+      .setFontWeight("bold");
   }
 
   function getGeneratedRowCounts(): number[] {
