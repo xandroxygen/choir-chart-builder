@@ -182,6 +182,7 @@ function reset() {
   SheetFactory.clearDataSheets();
   SheetFactory.initializeDataSheets();
   SheetFactory.clearOutputSheets();
+  SheetFactory.resetInputSheet();
 }
 
 function onEditTrigger(e: GoogleAppsScript.Events.SheetsOnEdit) {
@@ -207,7 +208,7 @@ function onOpenTrigger() {
       functionName: "confirmRowCounts"
     },
     {
-      name: "3. Confirm seats per section + continue",
+      name: "3. Confirm seats per section + generate chart",
       functionName: "confirmSectionStacks"
     },
     {

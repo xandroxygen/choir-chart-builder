@@ -72,6 +72,15 @@ export function Sheet() {
     }
   }
 
+  function resetInputSheet() {
+    const sheet = Sheet().getSheetByName(references().sheets.Input);
+    sheet.clear();
+    sheet
+      .getRange("A1:D1")
+      .setValues([["FIRST", "LAST", "SECTION", "HEIGHT"]])
+      .setFontWeight("bold");
+  }
+
   function getRowsRange(
     r: number,
     c: number,
@@ -172,6 +181,7 @@ export function Sheet() {
     dataSingersSheet,
     dataAlternateSingersSheet,
     readInputData,
+    resetInputSheet,
     getRowsRange,
     clearDataSheets,
     clearOutputSheets,
