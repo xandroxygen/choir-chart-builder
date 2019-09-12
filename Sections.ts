@@ -48,7 +48,7 @@ export function Sections() {
     // determine number of octets
     // there should always be at least 2 singers from every section in an octet
     // so use the smallest section
-    const octetCount = Math.min(...sections.map(s => s.count)) / 2;
+    const octetCount = Math.floor(Math.min(...sections.map(s => s.count)) / 2);
     const total = sections.reduce((sum, s) => sum + s.count, 0);
     const initialCount = Math.floor(total / octetCount);
     const remainder = total % octetCount;
