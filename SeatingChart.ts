@@ -99,8 +99,8 @@ export function SeatingChart() {
       });
 
       const [r, c] = references().cells.output.chart;
-      const numRows = 1 + sortedRows.length;
-      const numColumns = 2 + maxRowSize;
+      const numRows = values.length;
+      const numColumns = values[0].length;
 
       const sheet = getChartSheet(isAlternate);
 
